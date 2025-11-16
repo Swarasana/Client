@@ -29,7 +29,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ isVisible, onAnimationCompl
                     transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
                 >
                     <motion.div
-                        className="w-72 h-72 rounded-3xl overflow-hidden bg-white/10 backdrop-blur-sm relative"
+                        className="w-72 h-72 overflow-hidden bg-white/10 backdrop-blur-sm relative"
                         whileHover={{ scale: 1.05 }}
                         transition={{ type: "spring", stiffness: 300, damping: 20 }}
                     >
