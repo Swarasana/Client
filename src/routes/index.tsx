@@ -1,13 +1,31 @@
-import { Outlet, RouteObject, createBrowserRouter } from "react-router-dom";
-import { Home } from "@/pages";
-import { Navbar, Footer } from "@/components";
+import { Outlet, RouteObject, createBrowserRouter, useLocation } from "react-router-dom";
+import { Home, Explore, Profile } from "@/pages";
+import { Footer, Navbar } from "@/components";
+import { motion } from "framer-motion";
 // import { AuthProvider } from "@/contexts/AuthContext";
 
 const MainLayout = () => {
+    const location = useLocation();
+    
     return (
         <>
             <Navbar />
-            <Outlet />
+            <div className="md:ml-64 pb-20 md:pb-0 min-h-screen">
+                <motion.div
+                    key={location.pathname}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -30 }}
+                    transition={{ 
+                        duration: 0.2, 
+                        ease: "easeInOut",
+                        type: "tween"
+                    }}
+                    className="w-full"
+                >
+                    <Outlet />
+                </motion.div>
+            </div>
             <Footer />
         </>
     );
@@ -25,6 +43,14 @@ const routes: RouteObject[] = [
             {
                 path: "/",
                 element: <Home />,
+            },
+            {
+                path: "/explore",
+                element: <Explore />,
+            },
+            {
+                path: "/profile",
+                element: <Profile />,
             }
         ],
     },

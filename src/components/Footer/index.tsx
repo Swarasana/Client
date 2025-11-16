@@ -1,11 +1,13 @@
 import React from 'react';
 
-const Navbar: React.FC = () => {
+const Footer: React.FC = () => {
     return (
-        <div className="flex items-center justify-between bg-gray-800 p-5 px-8 z-50 text-white">
-            INI FOOTER
-        </div>
+        <footer className="hidden md:block md:ml-64 bg-gray-800 text-white py-4 px-6">
+            <div className="text-center text-sm text-gray-300">
+                © 2024 Swarasana. All rights reserved.
+            </div>
+        </footer>
     )
 };
 
-export default Navbar;
+export default Footer;
