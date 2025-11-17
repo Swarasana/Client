@@ -19,7 +19,7 @@ export default defineConfig({
         "short_name": "Swarasana",
         "description": "Platform Komunal Inklusif Berbasis AI untuk Ruang Budaya",
         "theme_color": "#FFFFFF",
-        "background_color": "#054FB9",
+        "background_color": "#015289",
         "display": "standalone",
         "scope": "/",
         "start_url": "/",

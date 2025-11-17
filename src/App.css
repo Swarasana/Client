@@ -21,3 +21,20 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #292F3B;
 }
+
+/* Hide scrollbar on mobile devices */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* For Firefox */
+  html {
+    scrollbar-width: none;
+  }
+  
+  /* For older browsers */
+  body {
+    -ms-overflow-style: none;
+  }
+}
