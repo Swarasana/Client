@@ -1,5 +1,5 @@
 import { Outlet, RouteObject, createBrowserRouter, useLocation } from "react-router-dom";
-import { Home, Explore, Profile } from "@/pages";
+import { Explore, Profile } from "@/pages";
 import { Footer, Navbar } from "@/components";
 import { motion } from "framer-motion";
 // import { AuthProvider } from "@/contexts/AuthContext";
@@ -42,10 +42,6 @@ const routes: RouteObject[] = [
         children: [
             {
                 path: "/",
-                element: <Home />,
-            },
-            {
-                path: "/explore",
                 element: <Explore />,
             },
             {
@@ -60,7 +56,7 @@ const routes: RouteObject[] = [
         children: [
             {
                 path: "/auth",
-                element: <Home />,
+                element: <Explore />,
             }
         ],
     },

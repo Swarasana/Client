@@ -1,14 +1,13 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Home, Compass, User } from 'lucide-react';
+import { Compass, User } from 'lucide-react';
 
 const Navbar: React.FC = () => {
     const location = useLocation();
     
     const navItems = [
-        { path: '/', label: 'Home', icon: Home },
-        { path: '/explore', label: 'Explore', icon: Compass },
+        { path: '/', label: 'Explore', icon: Compass },
         { path: '/profile', label: 'Profile', icon: User }
     ];
 
