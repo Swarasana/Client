@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { motion, PanInfo } from "framer-motion";
-import { Search, Volume2, ArrowUpRight } from "lucide-react";
+import { Search, Volume2 } from "lucide-react";
 import { exhibitionsApi } from "@/api";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components";
+import { ErrorState, ExhibitionCard } from "@/components";
 
 import title from "@/assets/logos/title.png"
 import topDecor from "@/assets/images/top-decor.png";
@@ -173,41 +173,12 @@ const Explore: React.FC = () => {
                                 <div key={`desktop-skeleton-${index}`} className="bg-white/10 backdrop-blur-sm rounded-lg aspect-[4/3] animate-pulse" />
                             ))
                         ) : exhibitions.length > 0 ? exhibitions.map((exhibition, index) => (
-                            <motion.div
+                            <ExhibitionCard
                                 key={exhibition.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                            >
-                                <Card className="bg-white/10 backdrop-blur-sm border-0 overflow-hidden hover:bg-white/20 transition-all duration-300 cursor-pointer">
-                                    <CardContent className="p-0">
-                                        <div className="aspect-[4/3] bg-gray-300 relative">
-                                            {/* Image */}
-                                            <img 
-                                                src={exhibition.image_url || "https://placehold.co/207x256"} 
-                                                alt={exhibition.name}
-                                                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                            />
-
-                                            {/* Greadient overlay */}
-                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                                            
-                                            {/* Text Content */}
-                                            <div className="absolute bottom-5 left-5 right-5 z-20">
-                                                <h3 className="text-yellow1 font-sf font-bold mb-1 text-xl line-clamp-2 leading-tight">
-                                                    {exhibition.name}
-                                                </h3>
-                                                <div className="flex justify-between items-center">
-                                                    <p className="text-white/80 font-inter text-sm">{exhibition.location}</p>
-                                                    <div className="text-white hover:bg-white/20 text-xs px-1 py-1 rounded cursor-pointer transition-colors">
-                                                        <ArrowUpRight className="w-5 h-5" />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
+                                exhibition={exhibition}
+                                index={index}
+                                variant="desktop"
+                            />
                         )) : (
                             <div className="col-span-full text-center py-8">
                                 <p className="text-white/70">No exhibitions found</p>
@@ -253,44 +224,14 @@ const Explore: React.FC = () => {
                                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                 >
                                     {exhibitions.map((exhibition, index) => (
-                                        <motion.div
+                                        <ExhibitionCard
                                             key={exhibition.id}
-                                            className="min-w-[207px] flex-shrink-0"
-                                        >
-                                            <Card className="bg-white/10 rounded-3xl backdrop-blur-sm border-0 overflow-hidden">
-                                                <CardContent className="p-0 rounded-3xl">
-                                                    <div className="w-[207px] h-[256px] bg-gray-200 relative group">
-                                                        {/* Image */}
-                                                        <img 
-                                                            src={exhibition.image_url || "https://placehold.co/207x256"} 
-                                                            alt={exhibition.name}
-                                                            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                                        />
-
-                                                        {/* Greadient overlay */}
-                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                                                        {/* Yellow ring for active card */}
-                                                        {index === currentSlide && (
-                                                            <div className="absolute inset-0 border-4 border-yellow-400 rounded-3xl z-10 pointer-events-none" />
-                                                        )}
-
-                                                        {/* Text Content */}
-                                                        <div className="absolute bottom-5 left-5 right-5 z-20">
-                                                            <h3 className="text-yellow1 font-sf font-bold mb-1 text-xl line-clamp-2 leading-tight">
-                                                                {exhibition.name}
-                                                            </h3>
-                                                            <div className="flex justify-between items-center">
-                                                                <p className="text-white/80 font-inter text-sm">{exhibition.location}</p>
-                                                                <div className="text-white hover:bg-white/20 text-xs px-1 py-1 rounded cursor-pointer transition-colors">
-                                                                    <ArrowUpRight className="w-5 h-5" />
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        </motion.div>
+                                            exhibition={exhibition}
+                                            index={index}
+                                            isActive={index === currentSlide}
+                                            variant="mobile"
+                                            mobileSize="large"
+                                        />
                                     ))}
                                 </motion.div>
                                 

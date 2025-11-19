@@ -1,7 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { ArtsyImagePlaceholder } from "@/components";
 
 interface Exhibition {
   id: string;
@@ -17,6 +19,7 @@ interface ExhibitionCardProps {
   isActive?: boolean;
   onClick?: () => void;
   variant?: "mobile" | "desktop";
+  mobileSize?: "small" | "large"; // small: 160x209, large: 207x256
 }
 
 const ExhibitionCard: React.FC<ExhibitionCardProps> = ({
@@ -24,42 +27,59 @@ const ExhibitionCard: React.FC<ExhibitionCardProps> = ({
   index = 0,
   isActive = false,
   onClick,
-  variant = "desktop"
+  variant = "desktop",
+  mobileSize = "small"
 }) => {
+  const navigate = useNavigate();
   const isMobile = variant === "mobile";
+  
+  // Determine mobile dimensions
+  const mobileDimensions = mobileSize === "large" 
+    ? "w-[207px] h-[256px] min-w-[207px]" 
+    : "w-[160px] h-[209px] min-w-[160px]";
+
+  const handleClick = () => {
+    if (onClick) {
+      onClick();
+    }
+    navigate(`/exhibition/${exhibition.id}`);
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
-      className={isMobile ? "min-w-[160px] flex-shrink-0" : ""}
-      onClick={onClick}
+      className={isMobile ? "flex-shrink-0" : ""}
+      onClick={handleClick}
     >
       <Card className={`bg-white/10 backdrop-blur-sm border-0 overflow-hidden hover:bg-white/20 transition-all duration-300 cursor-pointer ${
         isMobile ? "rounded-3xl" : ""
       }`}>
         <CardContent className={`p-0 ${isMobile ? "rounded-3xl" : ""}`}>
           <div className={`${
-            isMobile ? "w-[160px] h-[209px]" : "aspect-[4/3]"
-          } bg-gray-200 relative group`}>
-            {/* Image */}
-            <img 
-              src={exhibition.image_url || "https://placehold.co/207x256"} 
+            isMobile ? mobileDimensions : "aspect-[4/3]"
+          } relative group`}>
+            {/* Image with Artsy Placeholder */}
+            <ArtsyImagePlaceholder
+              src={exhibition.image_url}
               alt={exhibition.name}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              name={exhibition.name}
+              variant="aspect-fill"
+              imageClassName="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 z-0"
+              className="absolute inset-0 z-0"
             />
 
             {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent z-10" />
 
             {/* Yellow ring for active card (mobile only) */}
             {isMobile && isActive && (
-              <div className="absolute inset-0 border-4 border-yellow-400 rounded-3xl z-10 pointer-events-none" />
+              <div className="absolute inset-0 border-4 border-yellow-400 rounded-3xl z-20 pointer-events-none" />
             )}
 
             {/* Text Content */}
-            <div className={`absolute ${isMobile ? "bottom-5 left-5 right-5" : "bottom-5 left-5 right-5"} z-20`}>
+            <div className={`absolute ${isMobile ? "bottom-5 left-5 right-5" : "bottom-5 left-5 right-5"} z-30`}>
               <h3 className="text-yellow1 font-sf font-bold mb-1 text-xl line-clamp-2 leading-tight">
                 {exhibition.name}
               </h3>
