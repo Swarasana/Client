@@ -10,7 +10,7 @@ const MainLayout = () => {
     return (
         <>
             <Navbar />
-            <div className="md:ml-64 pb-20 md:pb-0 min-h-screen">
+            <div className="md:ml-64 pb-16 md:pb-0 min-h-screen">
                 <motion.div
                     key={location.pathname}
                     initial={{ opacity: 0, y: 30 }}

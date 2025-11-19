@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios'
+import { ApiResponse } from '@/types'
 // import { useAuthStore } from '@/store/auth-store'
 
 // Core API Setup
@@ -49,23 +50,47 @@ export class APIService {
         const queryString = searchParams.toString()
         const finalUrl = queryString ? `${url}?${queryString}` : url
 
-        const response: AxiosResponse<T> = await this.api.get<T>(finalUrl)
-        return response.data
+        const response: AxiosResponse<ApiResponse<T>> = await this.api.get<ApiResponse<T>>(finalUrl)
+        
+        // Handle error response
+        if (!response.data.success) {
+            const errorMessage = response.data.error?.message || 'API request failed'
+            throw new Error(errorMessage)
+        }
+        
+        // Return the data from ApiResponse wrapper
+        return response.data.data as T
     }
 
     /**
      * Handles POST requests.
      */
     protected async post<T>(endpoint: string, data: unknown): Promise<T> {
-        const response: AxiosResponse<T> = await this.api.post<T>(`${this.basePath}${endpoint}`, data)
-        return response.data
+        const response: AxiosResponse<ApiResponse<T>> = await this.api.post<ApiResponse<T>>(`${this.basePath}${endpoint}`, data)
+        
+        // Handle error response
+        if (!response.data.success) {
+            const errorMessage = response.data.error?.message || 'API request failed'
+            throw new Error(errorMessage)
+        }
+        
+        // Return the data from ApiResponse wrapper
+        return response.data.data as T
     }
 
     /**
      * Handles PUT requests.
      */
     protected async put<T>(endpoint: string, data?: unknown): Promise<T> {
-        const response: AxiosResponse<T> = await this.api.put<T>(`${this.basePath}${endpoint}`, data)
-        return response.data
+        const response: AxiosResponse<ApiResponse<T>> = await this.api.put<ApiResponse<T>>(`${this.basePath}${endpoint}`, data)
+        
+        // Handle error response
+        if (!response.data.success) {
+            const errorMessage = response.data.error?.message || 'API request failed'
+            throw new Error(errorMessage)
+        }
+        
+        // Return the data from ApiResponse wrapper
+        return response.data.data as T
     }
 }

@@ -1,3 +1,14 @@
+// Base API Response
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  error?: {
+    message: string;
+    stack?: string;
+  };
+}
+
 export interface CursorPagination {
   cursor: string | null
   limit: string | null
@@ -50,6 +61,8 @@ export interface Exhibition {
   description: string;
   curator_id: string;
   curator_name: string;
+  location: string;
+  image_url: string;
   created_at: string;
   updated_at: string;
 }
