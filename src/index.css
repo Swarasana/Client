@@ -1,3 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+@font-face {
+  font-family: 'SFProRounded';
+  src: url('/src/assets/fonts/SF-Pro-Rounded-Light.otf') format('opentype');
+  font-weight: 300;   /* light */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'SFProRounded';
+  src: url('/src/assets/fonts/SF-Pro-Rounded-Regular.otf') format('opentype');
+  font-weight: 400;   /* Normal */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'SFProRounded';
+  src: url('/src/assets/fonts/SF-Pro-Rounded-Semibold.otf') format('opentype');
+  font-weight: 600;   /* Semibold */
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'SFProRounded';
+  src: url('/src/assets/fonts/SF-Pro-Rounded-Bold.otf') format('opentype');
+  font-weight: 700;   /* Bold */
+  font-style: normal;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
