@@ -186,10 +186,6 @@ const SearchPage: React.FC = () => {
                         exhibition={exhibition}
                         index={index}
                         variant="mobile"
-                        onClick={() => {
-                          // Handle exhibition click - navigate to exhibition detail
-                          console.log('Navigate to exhibition:', exhibition.id);
-                        }}
                       />
                     </div>
                   ))}
@@ -203,10 +199,6 @@ const SearchPage: React.FC = () => {
                       exhibition={exhibition}
                       index={index}
                       variant="desktop"
-                      onClick={() => {
-                        // Handle exhibition click - navigate to exhibition detail
-                        console.log('Navigate to exhibition:', exhibition.id);
-                      }}
                     />
                   ))}
                 </div>
