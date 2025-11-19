@@ -67,28 +67,21 @@ const Navbar: React.FC = () => {
                                 <NavLink
                                     key={item.path}
                                     to={item.path}
-                                    className="flex flex-col items-center py-2 px-4 relative"
+                                    className="flex flex-col items-center py-1 px-4 relative"
                                 >
                                     <motion.div
                                         className={`flex flex-col items-center ${
-                                            active ? 'text-blue-600' : 'text-gray-600'
+                                            active ? 'text-blue1' : 'text-gray-600'
                                         }`}
                                         whileTap={{ scale: 0.95 }}
                                     >
-                                        <Icon className={`w-5 h-5 mb-1 ${active ? 'text-blue-600' : 'text-gray-600'}`} />
-                                        <span className={`text-xs ${active ? 'text-blue-600 font-medium' : 'text-gray-600'}`}>
+                                        <div className={`px-5 py-1 mb-1 ${active ? 'bg-blue1/30 rounded-2xl' : ''}`}>
+                                            <Icon className={`w-5 h-5 ${active ? 'text-blue1' : 'text-gray-600'}`} />
+                                        </div>
+                                        <span className={`text-xs ${active ? 'text-blue1 font-medium' : 'text-gray-600'}`}>
                                             {item.label}
                                         </span>
                                     </motion.div>
-                                    {active && (
-                                        <motion.div
-                                            className="absolute -top-1 left-1/2 w-1 h-1 bg-blue-600 rounded-full"
-                                            layoutId="mobileActiveIndicator"
-                                            initial={{ opacity: 0, x: '-50%' }}
-                                            animate={{ opacity: 1, x: '-50%' }}
-                                            transition={{ duration: 0.2 }}
-                                        />
-                                    )}
                                 </NavLink>
                             );
                         })}
