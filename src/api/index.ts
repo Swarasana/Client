@@ -1,5 +1,5 @@
 import { AxiosInstance } from 'axios'
-import { Collection, CursorPagination, Exhibition } from '@/types'
+import { Collection, CursorPagination, Exhibition, PaginatedResponse } from '@/types'
 import { api, APIService } from './base'
 
 
@@ -13,8 +13,8 @@ export class CollectionsService extends APIService {
         return this.get<Collection>(`/${id}`)
     }
 
-    getComments(id: string, pagination: CursorPagination): Promise<Comment[]> {
-        return this.get<Comment[]>(`/${id}/comments`, pagination)
+    getComments(id: string, pagination: CursorPagination): Promise<PaginatedResponse<Comment>> {
+        return this.get<PaginatedResponse<Comment>>(`/${id}/comments`, pagination)
     }
 
     addComment(id: string, data: { username: string | null; user_pic_url: string | null; comment_text: string }): Promise<Comment> {
@@ -47,16 +47,16 @@ export class ExhibitionsService extends APIService {
         super(apiInstance, 'exhibitions')
     }
 
-    getAll(pagination: CursorPagination): Promise<Exhibition[]> {
-        return this.get<Exhibition[]>('', pagination)
+    getAll(pagination: CursorPagination): Promise<PaginatedResponse<Exhibition>> {
+        return this.get<PaginatedResponse<Exhibition>>('', pagination)
     }
 
     getById(id: string): Promise<Exhibition> {
         return this.get<Exhibition>(`/${id}`)
     }
 
-    getCollections(id: string, pagination: CursorPagination): Promise<Collection[]> {
-        return this.get<Collection[]>(`/${id}/collections`, pagination)
+    getCollections(id: string, pagination: CursorPagination): Promise<PaginatedResponse<Collection>> {
+        return this.get<PaginatedResponse<Collection>>(`/${id}/collections`, pagination)
     }
 }
 

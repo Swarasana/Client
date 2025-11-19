@@ -1,7 +1,16 @@
 export interface CursorPagination {
-    cursor: string | null
-    limit: string | null
-    [key: string]: string | null | number
+  cursor: string | null
+  limit: string | null
+  [key: string]: string | null | number
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    nextCursor: string | null;
+    hasMore: boolean;
+    totalCount?: number;
+  };
 }
 
 export interface User {
@@ -14,14 +23,14 @@ export interface User {
 }
 
 export interface Collection {
-    id: string;
-    name: string;
-    picture_url: string;
-    artist_name: string;
-    artist_explanation: string;
-    ai_summary_text: string;
-    created_at: string;
-    updated_at: string;
+  id: string;
+  name: string;
+  picture_url: string;
+  artist_name: string;
+  artist_explanation: string;
+  ai_summary_text: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Comment {
