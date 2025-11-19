@@ -10,12 +10,12 @@ const MainLayout = () => {
     return (
         <>
             <Navbar />
-            <div className="md:ml-64 pb-16 md:pb-0 min-h-screen">
+            <div className="md:ml-64 pb-16 md:pb-0 min-h-screen bg-blue1">
                 <motion.div
                     key={location.pathname}
-                    initial={{ opacity: 0, y: 30 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -30 }}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 1.05 }}
                     transition={{ 
                         duration: 0.2, 
                         ease: "easeInOut",
