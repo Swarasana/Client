@@ -1,16 +1,23 @@
 import { Outlet, RouteObject, createBrowserRouter, useLocation } from "react-router-dom";
-import { Explore, Profile } from "@/pages";
+import { useEffect } from "react";
+import { Explore, Profile, Search } from "@/pages";
 import { Footer, Navbar } from "@/components";
 import { motion } from "framer-motion";
 // import { AuthProvider } from "@/contexts/AuthContext";
 
 const MainLayout = () => {
     const location = useLocation();
+    const showMobileNavbar = location.pathname === '/' || location.pathname === '/profile';
+    
+    // Scroll to top when route changes
+    useEffect(() => {
+        window.scrollTo(0, 0);
+    }, [location.pathname]);
     
     return (
         <>
             <Navbar />
-            <div className="md:ml-64 pb-16 md:pb-0 min-h-screen bg-blue1">
+            <div className={`md:ml-64 ${showMobileNavbar ? 'pb-16' : 'pb-0'} md:pb-0 min-h-screen bg-blue1`}>
                 <motion.div
                     key={location.pathname}
                     initial={{ opacity: 0, scale: 0.95 }}
@@ -47,6 +54,10 @@ const routes: RouteObject[] = [
             {
                 path: "/profile",
                 element: <Profile />,
+            },
+            {
+                path: "/search",
+                element: <Search />,
             }
         ],
     },

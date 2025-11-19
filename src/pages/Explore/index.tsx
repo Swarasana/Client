@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { motion, PanInfo } from "framer-motion";
 import { Search, Volume2, ArrowUpRight } from "lucide-react";
 import { exhibitionsApi } from "@/api";
@@ -16,6 +17,7 @@ import eva from "@/assets/images/eva.png";
 
 
 const Explore: React.FC = () => {
+    const navigate = useNavigate();
     const [searchQuery, setSearchQuery] = useState("");
     const [currentSlide, setCurrentSlide] = useState(0);
     const autoScrollRef = useRef<number | null>(null);
@@ -29,10 +31,6 @@ const Explore: React.FC = () => {
     });
 
     const exhibitions = Array.isArray(exhibitionsData?.data) ? exhibitionsData.data : [];
-    const filteredExhibitions = exhibitions.length > 0 ? exhibitions.filter((exhibition) =>
-        exhibition?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        exhibition?.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    ) : [];
 
     // Audio characters data
     const audioCharacters = [
@@ -43,13 +41,13 @@ const Explore: React.FC = () => {
 
     // Auto-scroll functionality
     useEffect(() => {
-        if (filteredExhibitions.length <= 1) return;
+        if (exhibitions.length <= 1) return;
 
         autoScrollRef.current = window.setTimeout(() => {
             setCurrentSlide((prev) => {
                 const nextSlide = prev + 1;
                 // Loop back to first slide when reaching the end
-                return nextSlide >= filteredExhibitions.length ? 0 : nextSlide;
+                return nextSlide >= exhibitions.length ? 0 : nextSlide;
             });
         }, 10000); // 10 seconds
 
@@ -58,7 +56,7 @@ const Explore: React.FC = () => {
                 clearTimeout(autoScrollRef.current);
             }
         };
-    }, [currentSlide, filteredExhibitions.length]);
+    }, [currentSlide, exhibitions.length]);
 
 
     const handleDragEnd = (_event: unknown, info: PanInfo) => {
@@ -77,11 +75,18 @@ const Explore: React.FC = () => {
             // Swipe right (previous)
             setCurrentSlide((prev) => {
                 const newSlide = prev - slidesToMove;
-                return newSlide < 0 ? filteredExhibitions.length + newSlide : newSlide;
+                return newSlide < 0 ? exhibitions.length + newSlide : newSlide;
             });
         } else if (info.offset.x < -50) {
             // Swipe left (next)
-            setCurrentSlide((prev) => (prev + slidesToMove) % filteredExhibitions.length);
+            setCurrentSlide((prev) => (prev + slidesToMove) % exhibitions.length);
+        }
+    };
+
+    const handleSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
         }
     };
 
@@ -144,7 +149,7 @@ const Explore: React.FC = () => {
                 </div>
                 <div className="flex flex-col items-center mb-6 mt-2">    
                     {/* Search Bar */}
-                    <div className="w-full max-w-md relative">
+                    <form onSubmit={handleSearchSubmit} className="w-full max-w-md relative">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 w-5 h-5 z-10" />
                         <Input
                             type="text"
@@ -153,7 +158,7 @@ const Explore: React.FC = () => {
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="pl-10 bg-white backdrop-blur-sm border-0 rounded-full font-sf font-light text-gray-800 placeholder-gray-500"
                         />
-                    </div>
+                    </form>
                 </div>
 
                 {/* Indonesian Heritage Section */}
@@ -165,11 +170,9 @@ const Explore: React.FC = () => {
                         {isLoading ? (
                             // Desktop Skeleton Loading
                             Array.from({ length: 8 }).map((_, index) => (
-                                <div key={index} className="flex justify-center">
-                                    <SkeletonCard />
-                                </div>
+                                <div key={`desktop-skeleton-${index}`} className="bg-white/10 backdrop-blur-sm rounded-lg aspect-[4/3] animate-pulse" />
                             ))
-                        ) : filteredExhibitions.length > 0 ? filteredExhibitions.map((exhibition, index) => (
+                        ) : exhibitions.length > 0 ? exhibitions.map((exhibition, index) => (
                             <motion.div
                                 key={exhibition.id}
                                 initial={{ opacity: 0, y: 20 }}
@@ -231,25 +234,25 @@ const Explore: React.FC = () => {
                                     ))}
                                 </div>
                             </div>
-                        ) : filteredExhibitions.length > 0 ? (
+                        ) : exhibitions.length > 0 ? (
                             <div className="overflow-hidden">
                                 <motion.div
                                     className="flex gap-4 cursor-grab active:cursor-grabbing"
                                     drag="x"
                                     dragConstraints={{
-                                        left: -(filteredExhibitions.length - 1) * 215 - (filteredExhibitions.length > 1 ? 16 : 0),
+                                        left: -(exhibitions.length - 1) * 215 - (exhibitions.length > 1 ? 16 : 0),
                                         right: 0
                                     }}
                                     dragElastic={0.2}
                                     onDragEnd={handleDragEnd}
                                     animate={{ 
-                                        x: currentSlide === filteredExhibitions.length - 1 
+                                        x: currentSlide === exhibitions.length - 1 
                                             ? -(currentSlide * 215 - (window.innerWidth - 207 - 32)) // Align last card to right
                                             : -currentSlide * 215
                                     }}
                                     transition={{ type: "spring", stiffness: 300, damping: 30 }}
                                 >
-                                    {filteredExhibitions.map((exhibition, index) => (
+                                    {exhibitions.map((exhibition, index) => (
                                         <motion.div
                                             key={exhibition.id}
                                             className="min-w-[207px] flex-shrink-0"
@@ -293,7 +296,7 @@ const Explore: React.FC = () => {
                                 
                                 {/* Dot indicators */}
                                 <div className="flex justify-center mt-4 gap-2">
-                                    {filteredExhibitions.map((_, index) => (
+                                    {exhibitions.map((_, index) => (
                                         <button
                                             key={index}
                                             className={`w-2 h-2 rounded-full transition-all ${

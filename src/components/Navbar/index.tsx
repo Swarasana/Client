@@ -12,6 +12,7 @@ const Navbar: React.FC = () => {
     ];
 
     const isActive = (path: string) => location.pathname === path;
+    const showMobileNavbar = location.pathname === '/' || location.pathname === '/profile';
 
     return (
         <>
@@ -56,42 +57,44 @@ const Navbar: React.FC = () => {
             </aside>
 
             {/* Mobile Bottom Navigation */}
-            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-                <div className="flex justify-around items-center py-2">
-                    {navItems.map((item) => {
-                        const Icon = item.icon;
-                        const active = isActive(item.path);
-                        return (
-                            <NavLink
-                                key={item.path}
-                                to={item.path}
-                                className="flex flex-col items-center py-2 px-4 relative"
-                            >
-                                <motion.div
-                                    className={`flex flex-col items-center ${
-                                        active ? 'text-blue-600' : 'text-gray-600'
-                                    }`}
-                                    whileTap={{ scale: 0.95 }}
+            {showMobileNavbar && (
+                <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+                    <div className="flex justify-around items-center py-2">
+                        {navItems.map((item) => {
+                            const Icon = item.icon;
+                            const active = isActive(item.path);
+                            return (
+                                <NavLink
+                                    key={item.path}
+                                    to={item.path}
+                                    className="flex flex-col items-center py-2 px-4 relative"
                                 >
-                                    <Icon className={`w-5 h-5 mb-1 ${active ? 'text-blue-600' : 'text-gray-600'}`} />
-                                    <span className={`text-xs ${active ? 'text-blue-600 font-medium' : 'text-gray-600'}`}>
-                                        {item.label}
-                                    </span>
-                                </motion.div>
-                                {active && (
                                     <motion.div
-                                        className="absolute -top-1 left-1/2 w-1 h-1 bg-blue-600 rounded-full"
-                                        layoutId="mobileActiveIndicator"
-                                        initial={{ opacity: 0, x: '-50%' }}
-                                        animate={{ opacity: 1, x: '-50%' }}
-                                        transition={{ duration: 0.2 }}
-                                    />
-                                )}
-                            </NavLink>
-                        );
-                    })}
-                </div>
-            </nav>
+                                        className={`flex flex-col items-center ${
+                                            active ? 'text-blue-600' : 'text-gray-600'
+                                        }`}
+                                        whileTap={{ scale: 0.95 }}
+                                    >
+                                        <Icon className={`w-5 h-5 mb-1 ${active ? 'text-blue-600' : 'text-gray-600'}`} />
+                                        <span className={`text-xs ${active ? 'text-blue-600 font-medium' : 'text-gray-600'}`}>
+                                            {item.label}
+                                        </span>
+                                    </motion.div>
+                                    {active && (
+                                        <motion.div
+                                            className="absolute -top-1 left-1/2 w-1 h-1 bg-blue-600 rounded-full"
+                                            layoutId="mobileActiveIndicator"
+                                            initial={{ opacity: 0, x: '-50%' }}
+                                            animate={{ opacity: 1, x: '-50%' }}
+                                            transition={{ duration: 0.2 }}
+                                        />
+                                    )}
+                                </NavLink>
+                            );
+                        })}
+                    </div>
+                </nav>
+            )}
         </>
     );
 };
