@@ -82,7 +82,7 @@ const DescriptionContent: React.FC<DescriptionContentProps> = ({
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-inter font-semibold text-gray-900">Tentang Koleksi</h3>
             <div className="flex items-center text-teal-600">
-              <Sparkles className="w-5 h-5 mr-2" />
+              <Sparkles className="w-5 h-5 mr-2 fill-teal-600" />
               <span className="text-base font-sf font-medium">AI Overview</span>
             </div>
           </div>

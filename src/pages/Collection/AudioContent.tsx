@@ -12,6 +12,8 @@ import {
 import anton from "@/assets/images/anton.png";
 import dede from "@/assets/images/dede.png";
 import eva from "@/assets/images/eva.png";
+import kurator from "@/assets/images/kurator.png";
+import publik from "@/assets/images/publik.png";
 
 // Audio characters data
 const audioCharacters = [
@@ -32,6 +34,24 @@ const audioCharacters = [
     avatar: eva, 
     color: "bg-blue-400", 
     description: "Karakter ceria dan penuh energi"
+  }
+];
+
+// Narration version characters data
+const narrationVersions = [
+  {
+    name: "Kurator",
+    key: "kurator",
+    avatar: kurator, // Using Anton for curator version
+    color: "bg-[#FFEBB2]",
+    description: "Penjelasan ahli dan mendalam"
+  },
+  {
+    name: "Publik", 
+    key: "Publik",
+    avatar: publik, // Using Eva for visitor version
+    color: "bg-[#FFEBB2]",
+    description: "Perspektif publik dan pengalaman"
   }
 ];
 
@@ -126,14 +146,14 @@ const AudioContent: React.FC<AudioContentProps> = ({
                 disabled={!isFormComplete}
                 className={`rounded-full w-12 h-12 p-0 shadow-lg transition-all ${
                   isFormComplete 
-                    ? 'bg-blue2 hover:bg-green-600 text-white' 
+                    ? 'bg-yellow-400 hover:bg-yellow-600 text-black' 
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
                 {isPlaying ? (
-                  <Pause className="w-5 h-5" />
+                  <Pause className="w-5 h-5 fill-black" />
                 ) : (
-                  <Play className="w-5 h-5 ml-0.5" />
+                  <Play className="w-5 h-5 ml-0.5 fill-black" />
                 )}
               </Button>
             </div>
@@ -190,48 +210,31 @@ const AudioContent: React.FC<AudioContentProps> = ({
             </div>
           </div>
 
-          {/* Version Selection - Radio Form */}
-          <div className="mb-6">
+          {/* Version Selection - Character Style */}
+          <div className="mb-8">
             <h3 className="text-lg font-inter font-semibold text-gray-900 mb-4">Pilih Narasi</h3>
-            <div className="space-y-3">
-              <button 
-                onClick={() => setSelectedVersion('kurator')}
-                className={`w-full flex items-center p-3 rounded-lg transition-colors ${
-                  selectedVersion === 'kurator' 
-                    ? 'bg-blue-50 border border-blue-400' 
-                    : 'bg-gray-50 hover:bg-gray-100'
-                }`}
-              >
-                <div className={`w-4 h-4 rounded-full mr-3 border-2 flex items-center justify-center ${
-                  selectedVersion === 'kurator' 
-                    ? 'border-blue-400 bg-blue-400' 
-                    : 'border-gray-400 bg-white'
-                }`}>
-                  {selectedVersion === 'kurator' && (
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  )}
-                </div>
-                <span className="text-base font-sf text-gray-900">Versi Kurator</span>
-              </button>
-              <button 
-                onClick={() => setSelectedVersion('pengunjung')}
-                className={`w-full flex items-center p-3 rounded-lg transition-colors ${
-                  selectedVersion === 'pengunjung' 
-                    ? 'bg-blue-50 border border-blue-400' 
-                    : 'bg-gray-50 hover:bg-gray-100'
-                }`}
-              >
-                <div className={`w-4 h-4 rounded-full mr-3 border-2 flex items-center justify-center ${
-                  selectedVersion === 'pengunjung' 
-                    ? 'border-blue-400 bg-blue-400' 
-                    : 'border-gray-400 bg-white'
-                }`}>
-                  {selectedVersion === 'pengunjung' && (
-                    <div className="w-2 h-2 bg-white rounded-full"></div>
-                  )}
-                </div>
-                <span className="text-base font-sf text-gray-900">Versi Pengunjung</span>
-              </button>
+            <div className="flex gap-6 justify-center">
+              {narrationVersions.map((version) => (
+                <button
+                  key={version.key}
+                  onClick={() => setSelectedVersion(version.key)}
+                  className={`flex flex-col items-center transition-all ${
+                    selectedVersion === version.key ? 'scale-110' : 'hover:scale-105'
+                  }`}
+                >
+                  <div className={`w-20 h-20 ${version.color} rounded-full flex items-center justify-center mb-2 overflow-hidden ${
+                    selectedVersion === version.key ? 'ring-4 ring-blue-400 ring-opacity-50' : ''
+                  }`}>
+                    <img 
+                      src={version.avatar} 
+                      alt={version.name}
+                      className="w-full h-full object-cover p-3"
+                    />
+                  </div>
+                  <span className="text-sm font-sf font-medium text-gray-900">{version.name}</span>
+                  <span className="text-xs font-sf text-gray-500 text-center px-2">{version.description}</span>
+                </button>
+              ))}
             </div>
           </div>
 
@@ -260,14 +263,14 @@ const AudioContent: React.FC<AudioContentProps> = ({
                 disabled={!isFormComplete}
                 className={`rounded-full w-16 h-16 p-0 shadow-lg transition-all ${
                   isFormComplete 
-                    ? 'bg-blue2 hover:bg-green-600 text-white' 
+                    ? 'bg-yellow-400 hover:bg-yellow-600 text-black' 
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
                 {isPlaying ? (
-                  <Pause className="w-8 h-8" />
+                  <Pause className="w-8 h-8 fill-black" />
                 ) : (
-                  <Play className="w-8 h-8 ml-1" />
+                  <Play className="w-8 h-8 ml-1 fill-black" />
                 )}
               </Button>
             </div>

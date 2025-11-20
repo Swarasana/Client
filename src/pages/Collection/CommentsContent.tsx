@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Comment } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -39,7 +40,7 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
   const [currentStep, setCurrentStep] = useState<CommentStep>('collapsed');
   const [previousStep, setPreviousStep] = useState<CommentStep>('collapsed');
   const [newComment, setNewComment] = useState({ name: '', comment: '' });
-  const [isAnonymous, _] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
   const [dislikedComments, setDislikedComments] = useState<Set<string>>(new Set());
 
@@ -120,7 +121,7 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
                     size="sm" 
                     className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full p-2 ml-auto"
                   >
-                    <Volume2 className="w-4 h-4" />
+                    <Volume2 className="w-4 h-4 fill-gray-900" />
                   </Button>
                 </div>
                 {summaryLoading || !aiSummaryText ? (
@@ -158,6 +159,7 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
               newComment={newComment}
               setNewComment={setNewComment}
               isAnonymous={isAnonymous}
+              setIsAnonymous={setIsAnonymous}
               handleSubmitComment={handleSubmitComment}
             />
           </DrawerContent>
@@ -187,6 +189,7 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
               newComment={newComment}
               setNewComment={setNewComment}
               isAnonymous={isAnonymous}
+              setIsAnonymous={setIsAnonymous}
               handleSubmitComment={handleSubmitComment}
             />
           </AnimatePresence>
@@ -213,6 +216,7 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
   newComment: { name: string; comment: string };
   setNewComment: React.Dispatch<React.SetStateAction<{ name: string; comment: string }>>;
   isAnonymous: boolean;
+  setIsAnonymous: React.Dispatch<React.SetStateAction<boolean>>;
   handleSubmitComment: () => void;
 }>(({ 
   currentStep,
@@ -230,6 +234,7 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
   newComment,
   setNewComment,
   isAnonymous,
+  setIsAnonymous,
   handleSubmitComment
 }, _ref) => {
   // Animation variants based on direction - only entrance animation
@@ -332,7 +337,7 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
           >
             <Button
               onClick={() => onBack('form')}
-              className="w-full p-4 bg-blue2 hover:bg-blue2/80 text-white rounded-lg"
+              className="w-full p-4 py-6 bg-blue2 hover:bg-blue2/80 text-white rounded-full"
             >
               <div className="text-center">
                 <div className="font-sf font-semibold text-lg">Login</div>
@@ -347,7 +352,7 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
             transition={{ duration: 0.3, delay: 0.2 }}
           >
             <p className="text-base text-gray-900 font-sf">
-              <span className="underline">Buat akun di sini</span> untuk dapatkan hadiah menarik atau
+              <span className="underline font-bold">Buat akun di sini</span> untuk dapatkan hadiah menarik atau
             </p>
           </motion.div>
 
@@ -360,7 +365,7 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
           >
             <Button
               onClick={() => onBack('form')}
-              className="w-full p-4 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg"
+              className="w-full p-4 py-6 bg-yellow-400 hover:bg-yellow-600 text-gray-900 rounded-full"
             >
               <div className="text-center">
                 <div className="font-sf font-semibold text-lg">Komentar tanpa Akun</div>
@@ -418,14 +423,34 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
               Nama
             </label>
             <Input
-              value={newComment.name}
+              value={isAnonymous ? '' : newComment.name}
               onChange={(e) => setNewComment(prev => ({ ...prev, name: e.target.value }))}
               placeholder=""
-              className="w-full p-3 bg-gray-100 border-none rounded-lg"
+              disabled={isAnonymous}
+              className={`w-full p-3 border-none rounded-2xl ${
+                isAnonymous ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-gray-100'
+              }`}
             />
-            {isAnonymous && (
-              <p className="text-sm text-gray-500 mt-2">Klik untuk jadi anonim</p>
-            )}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.15 }}
+            className="flex items-center space-x-2"
+          >
+            <Checkbox 
+              id="anonymous" 
+              checked={isAnonymous}
+              onCheckedChange={(checked) => setIsAnonymous(checked as boolean)}
+              className="border-gray-400"
+            />
+            <label 
+              htmlFor="anonymous" 
+              className="text-sm text-gray-600 font-sf cursor-pointer"
+            >
+              Klik untuk jadi anonim
+            </label>
           </motion.div>
 
           <motion.div
@@ -440,7 +465,7 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
               value={newComment.comment}
               onChange={(e) => setNewComment(prev => ({ ...prev, comment: e.target.value }))}
               placeholder=""
-              className="w-full p-3 bg-gray-100 border-none rounded-lg h-32 resize-none"
+              className="w-full p-3 bg-gray-100 border-none rounded-2xl h-32 resize-none"
             />
           </motion.div>
 
@@ -457,7 +482,7 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
                 onBack('list');
               }}
               disabled={!newComment.comment.trim()}
-              className="w-full p-4 bg-blue2 hover:bg-blue2/80 text-white rounded-lg font-sf font-semibold text-lg"
+              className="w-full p-4 py-6 bg-blue2 hover:bg-blue2/80 text-white rounded-full font-sf font-semibold text-lg"
             >
               Kirim
             </Button>
@@ -487,7 +512,7 @@ const CommentsList: React.FC<{
     <div className="flex-1 overflow-y-auto p-6 pb-0" style={{ minHeight: 0 }}>
       {/* AI Summary */}
       <motion.div 
-        className="mb-6 p-4 bg-gradient-to-r from-teal-50 to-blue-50 rounded-lg border border-teal-100"
+        className="mb-6 p-4 bg-gradient-to-r from-teal-50 to-blue-50 rounded-2xl border border-teal-100"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
@@ -505,7 +530,7 @@ const CommentsList: React.FC<{
             size="sm" 
             className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full p-2"
           >
-            <Volume2 className="w-4 h-4" />
+            <Volume2 className="w-4 h-4 fill-gray-900" />
           </Button>
         </motion.div>
       </div>
@@ -540,7 +565,7 @@ const CommentsList: React.FC<{
         {comments.length > 0 ? comments.map((comment, index) => (
           <motion.div 
             key={comment.id} 
-            className="bg-gray-50 rounded-lg p-4"
+            className="bg-gray-50 rounded-2xl p-4"
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
@@ -555,7 +580,7 @@ const CommentsList: React.FC<{
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.9 }}
               >
-                <Volume2 className="w-4 h-4 text-gray-400" />
+                <Volume2 className="w-4 h-4 text-gray-400 fill-gray-400" />
               </motion.div>
             </div>
             <p className="text-gray-700 text-base mb-3 font-sf font-light">
@@ -627,14 +652,14 @@ const CommentsList: React.FC<{
       >
         <Button
           onClick={onContribute}
-          className="w-full p-4 bg-blue2 hover:bg-blue2/80 text-white rounded-lg font-sf font-semibold text-base"
+          className="w-full p-4 py-6 bg-blue2 hover:bg-blue2/80 text-white rounded-full font-sf font-semibold text-base"
         >
           Kontribusi
         </Button>
       </motion.div>
       
       <motion.div 
-        className="text-center mt-3"
+        className="text-center my-4 mb-2"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, delay: 0.5 }}
