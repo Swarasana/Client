@@ -1,13 +1,15 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import App from './App.tsx'
+import App, { setPWAUpdateCallback } from './App.tsx'
 import './index.css'
 import { registerSW } from "virtual:pwa-register";
 
 const updateSW = registerSW({
   onNeedRefresh() {
-    if (confirm("New content available. Reload?")) {
-      updateSW(true);
+    setPWAUpdateCallback(updateSW);
+    // Trigger the update prompt through the global function
+    if ((window as any).showPWAUpdatePrompt) {
+      (window as any).showPWAUpdatePrompt();
     }
   },
 });

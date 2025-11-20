@@ -6,9 +6,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
 import router from "./routes";
 import { SplashScreen } from "./components";
+import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Toaster } from "@/components/ui/toaster";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -19,8 +21,16 @@ const queryClient = new QueryClient({
   },
 });
 
+// Global state for PWA update
+let pwaUpdateSW: ((reloadPage?: boolean) => void) | null = null;
+
+export const setPWAUpdateCallback = (updateSW: (reloadPage?: boolean) => void) => {
+  pwaUpdateSW = updateSW;
+};
+
 function App() {
   const [showSplash, setShowSplash] = useState(false);
+  const [showUpdatePrompt, setShowUpdatePrompt] = useState(false);
 
   useEffect(() => {
     // Check if app is running as PWA or on mobile
@@ -38,6 +48,24 @@ function App() {
   const handleSplashComplete = () => {
     setShowSplash(false);
   };
+
+  const handlePWAUpdate = () => {
+    if (pwaUpdateSW) {
+      pwaUpdateSW(true);
+    }
+    setShowUpdatePrompt(false);
+  };
+
+  const handlePWAUpdateDismiss = () => {
+    setShowUpdatePrompt(false);
+  };
+
+  // Expose function to trigger update prompt
+  useEffect(() => {
+    (window as any).showPWAUpdatePrompt = () => {
+      setShowUpdatePrompt(true);
+    };
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -59,6 +87,12 @@ function App() {
         theme="light"
       />
       <RouterProvider router={router} />
+      <PWAUpdatePrompt
+        isOpen={showUpdatePrompt}
+        onUpdate={handlePWAUpdate}
+        onDismiss={handlePWAUpdateDismiss}
+      />
+      <Toaster />
     </QueryClientProvider>
   );
 }

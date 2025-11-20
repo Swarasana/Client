@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ErrorState, ArtsyImagePlaceholder } from "@/components";
+import { useToast } from "@/hooks/use-toast";
 import DescriptionContent from "./DescriptionContent";
 import AudioContent from "./AudioContent";
 import CommentsContent from "./CommentsContent";
@@ -27,6 +28,7 @@ type ContributionState = 'none' | 'form' | 'submitting';
 const CollectionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
   
   // State management
   const [currentSlide, setCurrentSlide] = useState<number>(0);
@@ -145,8 +147,51 @@ const CollectionDetail: React.FC = () => {
     console.log('Liking comment:', commentId);
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: collection?.name || 'Koleksi Swarasana',
+      text: `Lihat koleksi ${collection?.name} di Swarasana`,
+      url: window.location.href,
+    };
+
+    try {
+      // Check if Web Share API is available
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+        toast({
+          title: "Berhasil dibagikan!",
+          description: "Koleksi telah dibagikan",
+        });
+      } else {
+        // Fallback: Copy to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link disalin!",
+          description: "Link koleksi berhasil disalin ke clipboard",
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+      // Final fallback: Try to copy to clipboard
+      try {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link disalin!",
+          description: "Link koleksi berhasil disalin ke clipboard",
+        });
+      } catch (clipboardError) {
+        console.error('Clipboard error:', clipboardError);
+        toast({
+          title: "Gagal membagikan",
+          description: "Silakan salin link secara manual",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   return (
-    <main className="flex flex-col w-full h-screen bg-gradient-to-b from-blue1 via-blue1 to-blue2 text-white overflow-hidden">
+    <main className="flex flex-col w-full h-screen bg-gradient-to-t from-blue1 via-blue1 to-blue2 text-white overflow-hidden">
       {/* Header - 10% of screen */}
       <div className="flex justify-between items-center px-4 flex-shrink-0" style={{ height: '10vh' }}>
         <Button
@@ -160,6 +205,7 @@ const CollectionDetail: React.FC = () => {
         <Button
           variant="ghost"
           size="sm"
+          onClick={handleShare}
           className="text-white hover:bg-white/10 p-2 rounded-full"
         >
           <Share2 className="w-6 h-6" />
