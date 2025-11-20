@@ -16,6 +16,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { ErrorState, ArtsyImagePlaceholder } from "@/components";
 import { useToast } from "@/hooks/use-toast";
 import DescriptionContent from "./DescriptionContent";
@@ -25,6 +32,93 @@ import CommentsContent from "./CommentsContent";
 
 type ContentType = 'description' | 'audio' | 'comments';
 type ContributionState = 'none' | 'form' | 'submitting';
+
+// Component to track if image is actually loaded or showing placeholder
+const ClickableImage: React.FC<{
+  src?: string;
+  alt: string;
+  name: string;
+  className?: string;
+  imageClassName?: string;
+}> = ({ src, alt, name, className, imageClassName }) => {
+  const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  // Check if we have a valid source (same logic as ArtsyImagePlaceholder)
+  const isValidSrc = src && src.trim() !== '' && src !== 'undefined' && src !== 'null';
+  
+  // Show placeholder when no valid src OR when image failed to load
+  const isShowingPlaceholder = !isValidSrc || imageError;
+
+  if (isShowingPlaceholder) {
+    // Non-clickable placeholder
+    return (
+      <motion.div
+        className="relative w-72 h-auto"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6 }}
+      >
+        <ArtsyImagePlaceholder
+          src={src}
+          alt={alt}
+          name={name}
+          imageClassName={imageClassName}
+          className={className}
+        />
+      </motion.div>
+    );
+  }
+
+  // Clickable image with dialog
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <motion.div
+          className="relative w-72 h-auto cursor-pointer hover:scale-105 transition-transform duration-300"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <div className={className}>
+            {/* Show loading placeholder until image loads */}
+            {!imageLoaded && !imageError && (
+              <div className="absolute inset-0 bg-gray-200 animate-pulse flex items-center justify-center rounded-3xl">
+                <div className="w-8 h-8 text-gray-400">⏳</div>
+              </div>
+            )}
+            
+            {/* Actual image */}
+            <img
+              src={src}
+              alt={alt}
+              className={imageClassName}
+              onError={() => setImageError(true)}
+              onLoad={() => setImageLoaded(true)}
+            />
+          </div>
+        </motion.div>
+      </DialogTrigger>
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 border-none bg-transparent">
+        <DialogTitle className="sr-only">
+          {name} - Tampilan Gambar Besar
+        </DialogTitle>
+        <DialogDescription className="sr-only">
+          Gambar koleksi {name} ditampilkan dalam ukuran yang lebih besar untuk melihat detail
+        </DialogDescription>
+        <div className="relative flex items-center justify-center">
+          <img
+            src={src}
+            alt={alt}
+            className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 const CollectionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -266,20 +360,13 @@ const CollectionDetail: React.FC = () => {
         {collectionLoading ? (
           <Skeleton className="w-72 h-72 bg-white/10 rounded-3xl" />
         ) : collection ? (
-          <motion.div
-            className="relative w-72 h-auto"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-          >
-            <ArtsyImagePlaceholder
-              src={collection.picture_url}
-              alt={collection.name}
-              name={collection.name}
-              imageClassName="w-full h-full object-cover rounded-3xl"
-              className="w-full h-full rounded-3xl overflow-hidden shadow-2xl"
-            />
-          </motion.div>
+          <ClickableImage
+            src={collection.picture_url}
+            alt={collection.name}
+            name={collection.name}
+            className="w-full h-full rounded-3xl overflow-hidden shadow-2xl"
+            imageClassName="w-full h-full object-cover rounded-3xl"
+          />
         ) : null}
       </div>
 

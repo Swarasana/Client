@@ -90,7 +90,8 @@ const AudioContent: React.FC<AudioContentProps> = ({
         setProgress(prev => {
           const newProgress = prev + (100 / (AUDIO_DURATION / 100)); // Update every 100ms
           if (newProgress >= 100) {
-            onPlayPause(); // Auto-stop when finished
+            // Schedule the onPlayPause call for the next tick to avoid setState during render
+            setTimeout(() => onPlayPause(), 0);
             return 100;
           }
           return newProgress;

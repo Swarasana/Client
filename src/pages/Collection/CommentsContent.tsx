@@ -115,7 +115,7 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
               {/* AI Summary Preview */}
               <div className="flex-1">
                 <div className="flex items-center mb-1">
-                  <Sparkles className="w-4 h-4 mr-2 text-teal-600" />
+                  <Sparkles className="w-4 h-4 mr-2 text-teal-600 fill-teal-600" />
                   <span className="text-base font-sf font-semibold text-teal-600">AI Summary</span>
                   <Button 
                     size="sm" 
@@ -519,7 +519,7 @@ const CommentsList: React.FC<{
       >
       <div className="flex items-center justify-between w-full mb-2">
         <div className="flex items-center">
-          <Sparkles className="w-5 h-5 mr-2 text-teal-600" />
+          <Sparkles className="w-5 h-5 mr-2 text-teal-600 fill-teal-600" />
           <span className="text-base font-sf font-semibold text-teal-600">AI Summary</span>
         </div>
         <motion.div
@@ -634,7 +634,7 @@ const CommentsList: React.FC<{
             >
               <MessageSquare className="w-12 h-12 mx-auto mb-3 text-gray-300" />
             </motion.div>
-            <p className="text-sm">Belum ada komentar. Jadilah yang pertama!</p>
+            <p className="text-sm font-sf font-light">Belum ada komentar. Jadilah yang pertama!</p>
           </motion.div>
         )}
       </AnimatePresence>
