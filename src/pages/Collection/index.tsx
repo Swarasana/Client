@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { 
   ChevronLeft, 
@@ -11,7 +11,7 @@ import {
   ChevronUp,
   Book
 } from "lucide-react";
-import { collectionsApi } from "@/api";
+import { collectionsApi, commentsApi } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +29,7 @@ const CollectionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   // State management
   const [currentSlide, setCurrentSlide] = useState<number>(0);
@@ -75,7 +76,6 @@ const CollectionDetail: React.FC = () => {
     staleTime: 10 * 60 * 1000,
   });
 
-  const comments = commentsData?.data || [];
 
   if (collectionError) {
     let errorType: "network" | "server" | "generic" = "generic";
@@ -101,11 +101,64 @@ const CollectionDetail: React.FC = () => {
     // TODO: Implement actual audio playback
   };
 
-  const handleCommentSubmit = async () => {
-    // TODO: Implement comment submission
-    console.log('Submitting comment:', commentForm);
-    setContributionState('none');
-    setCurrentSlide(2); // Navigate to comments after submission
+  // React Query mutations
+  const addCommentMutation = useMutation({
+    mutationFn: async (commentData: { name: string; comment: string }) => {
+      if (!id) throw new Error('No collection ID');
+      return collectionsApi.addComment(id, {
+        username: commentData.name || null,
+        user_pic_url: null,
+        comment_text: commentData.comment
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Komentar terkirim!",
+        description: "Terima kasih atas kontribusi Anda",
+      });
+      // Invalidate comments to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['collection-comments', id] });
+      setContributionState('none');
+      setCommentForm({ username: '', comment: '', isAnonymous: false });
+    },
+    onError: (error) => {
+      console.error('Error submitting comment:', error);
+      toast({
+        title: "Gagal mengirim komentar",
+        description: "Silakan coba lagi",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const likeCommentMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      return commentsApi.like(commentId);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Komentar disukai!",
+        description: "Terima kasih atas apresiasi Anda",
+      });
+      // Invalidate comments to refresh like counts immediately
+      queryClient.invalidateQueries({ queryKey: ['collection-comments', id] });
+    },
+    onError: (error) => {
+      console.error('Error liking comment:', error);
+      toast({
+        title: "Gagal menyukai komentar",
+        description: "Silakan coba lagi",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const handleCommentSubmit = async (commentData: { name: string; comment: string }) => {
+    addCommentMutation.mutate(commentData);
+  };
+
+  const handleLikeComment = (commentId: string) => {
+    likeCommentMutation.mutate(commentId);
   };
 
   const slideRef = useRef<HTMLDivElement>(null);
@@ -140,11 +193,6 @@ const CollectionDetail: React.FC = () => {
       // Swiped right - go to previous slide
       setCurrentSlide(prev => Math.max(0, prev - 1));
     }
-  };
-
-  const handleLikeComment = (commentId: string) => {
-    // TODO: Implement comment liking
-    console.log('Liking comment:', commentId);
   };
 
   const handleShare = async () => {
@@ -284,11 +332,11 @@ const CollectionDetail: React.FC = () => {
                     
                     {type === 'comments' && (
                       <CommentsContent
-                        comments={comments as any}
+                        comments={(commentsData?.data || []) as any}
                         aiSummary={aiSummary}
                         summaryLoading={summaryLoading}
                         onLikeComment={handleLikeComment}
-                        onAddComment={() => setContributionState('form')}
+                        onAddComment={handleCommentSubmit}
                         isExpanded={isCommentsExpanded}
                         setIsExpanded={setIsCommentsExpanded}
                       />
@@ -359,7 +407,7 @@ const CollectionDetail: React.FC = () => {
 const ContributionForm: React.FC<{
   commentForm: any;
   setCommentForm: (form: any) => void;
-  onSubmit: () => void;
+  onSubmit: (commentData: { name: string; comment: string }) => void;
   onCancel: () => void;
 }> = ({ commentForm, setCommentForm, onSubmit, onCancel }) => (
   <div className="text-gray-900 p-6">
@@ -418,7 +466,7 @@ const ContributionForm: React.FC<{
           Batal
         </Button>
         <Button
-          onClick={onSubmit}
+          onClick={() => onSubmit({ name: commentForm.username, comment: commentForm.comment })}
           className="flex-1 bg-blue-600 hover:bg-blue-700 font-sf"
         >
           Kirim
