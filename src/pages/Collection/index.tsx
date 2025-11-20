@@ -1,0 +1,385 @@
+import React, { useState, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { 
+  ChevronLeft, 
+  Share2,
+  Volume2,
+  MessageSquare,
+  User,
+  ChevronUp,
+  Book
+} from "lucide-react";
+import { collectionsApi } from "@/api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { ErrorState, ArtsyImagePlaceholder } from "@/components";
+import DescriptionContent from "./DescriptionContent";
+import AudioContent from "./AudioContent";
+import CommentsContent from "./CommentsContent";
+
+
+type ContentType = 'description' | 'audio' | 'comments';
+type ContributionState = 'none' | 'form' | 'submitting';
+
+const CollectionDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  
+  // State management
+  const [currentSlide, setCurrentSlide] = useState<number>(0);
+  const [contributionState, setContributionState] = useState<ContributionState>('none');
+  
+  // Expand states for each card
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isAudioExpanded, setIsAudioExpanded] = useState(false);
+  const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
+  
+  const contentTypes: ContentType[] = ['description', 'audio', 'comments'];
+  const [selectedNarrator, setSelectedNarrator] = useState<string>('Anton');
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [commentForm, setCommentForm] = useState({
+    username: '',
+    comment: '',
+    isAnonymous: false
+  });
+
+  // Fetch collection details
+  const { data: collection, isLoading: collectionLoading, error: collectionError } = useQuery({
+    queryKey: ['collection', id],
+    queryFn: () => collectionsApi.getById(id!),
+    enabled: !!id,
+    retry: 3,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch comments for this collection
+  const { data: commentsData, isLoading: _ } = useQuery({
+    queryKey: ['collection-comments', id],
+    queryFn: () => collectionsApi.getComments(id!, { cursor: null, limit: '10' }),
+    enabled: !!id,
+    retry: 3,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  // Fetch AI Summary
+  const { data: aiSummary, isLoading: summaryLoading } = useQuery({
+    queryKey: ['collection-ai-summary', id],
+    queryFn: () => collectionsApi.getAISummary(id!),
+    enabled: !!id && currentSlide === 2, // Comments is index 2
+    retry: 3,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const comments = commentsData?.data || [];
+
+  if (collectionError) {
+    let errorType: "network" | "server" | "generic" = "generic";
+    if (collectionError.message.toLowerCase().includes('network')) {
+      errorType = "network";
+    } else if (collectionError.message.toLowerCase().includes('server')) {
+      errorType = "server";
+    }
+
+    return (
+      <ErrorState
+        type={errorType}
+        title="Gagal Memuat Detail Koleksi"
+        message="Tidak dapat memuat detail koleksi saat ini. Silakan coba lagi dalam beberapa saat."
+        onRetry={() => window.location.reload()}
+        fullPage={true}
+      />
+    );
+  }
+
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
+    // TODO: Implement actual audio playback
+  };
+
+  const handleCommentSubmit = async () => {
+    // TODO: Implement comment submission
+    console.log('Submitting comment:', commentForm);
+    setContributionState('none');
+    setCurrentSlide(2); // Navigate to comments after submission
+  };
+
+  const slideRef = useRef<HTMLDivElement>(null);
+  
+  const handleSlideChange = (index: number) => {
+    setCurrentSlide(index);
+  };
+  
+  // Handle touch events for better mobile interaction
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+  
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const minSwipeDistance = 50;
+    
+    if (distance > minSwipeDistance) {
+      // Swiped left - go to next slide
+      setCurrentSlide(prev => Math.min(contentTypes.length - 1, prev + 1));
+    } else if (distance < -minSwipeDistance) {
+      // Swiped right - go to previous slide
+      setCurrentSlide(prev => Math.max(0, prev - 1));
+    }
+  };
+
+  const handleLikeComment = (commentId: string) => {
+    // TODO: Implement comment liking
+    console.log('Liking comment:', commentId);
+  };
+
+  return (
+    <main className="flex flex-col w-full h-screen bg-gradient-to-b from-blue1 via-blue1 to-blue2 text-white overflow-hidden">
+      {/* Header - 10% of screen */}
+      <div className="flex justify-between items-center px-4 flex-shrink-0" style={{ height: '10vh' }}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="text-white hover:bg-white/10 p-2 rounded-full"
+        >
+          <ChevronLeft className="w-6 h-6" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-white hover:bg-white/10 p-2 rounded-full"
+        >
+          <Share2 className="w-6 h-6" />
+        </Button>
+      </div>
+
+      {/* Collection Image - 45% of screen */}
+      <div className="flex items-center justify-center px-4 flex-shrink-0 mb-4" style={{ height: '45vh' }}>
+        {collectionLoading ? (
+          <div className="w-80 h-80 bg-white/10 rounded-3xl animate-pulse" />
+        ) : collection ? (
+          <motion.div
+            className="relative w-72 h-72"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6 }}
+          >
+            <ArtsyImagePlaceholder
+              src={collection.picture_url}
+              alt={collection.name}
+              name={collection.name}
+              imageClassName="w-full h-full object-cover rounded-3xl"
+              className="w-full h-full rounded-3xl overflow-hidden shadow-2xl"
+            />
+          </motion.div>
+        ) : null}
+      </div>
+
+      {/* Content Carousel - 30% of screen */}
+      <div className="px-4 flex-shrink-0 mb-4" style={{ height: '30vh' }}>
+        <div 
+          className="relative w-full h-full"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ overflow: 'visible' }}
+        >
+          <div 
+            ref={slideRef}
+            className="flex transition-transform duration-300 ease-out h-full items-center"
+            style={{ 
+              transform: `translateX(calc(50% - 160px - ${currentSlide * 328}px))`,
+              gap: '0.5rem'
+            }}
+          >
+            {contentTypes.map((type, index) => {
+              const isActive = currentSlide === index;
+              return (
+                <div 
+                  key={type} 
+                  className="flex-shrink-0 h-full transition-transform duration-300 ease-out"
+                  style={{ 
+                    width: '320px',
+                    transform: `scale(${isActive ? 1 : 0.9})`
+                  }}
+                >
+                  <div className="bg-white rounded-3xl p-4 shadow-lg w-full h-[90%] overflow-hidden">
+                    {type === 'description' && (
+                      <DescriptionContent 
+                        collection={collection}
+                        isExpanded={isDescriptionExpanded}
+                        setIsExpanded={setIsDescriptionExpanded}
+                      />
+                    )}
+                    
+                    {type === 'audio' && (
+                      <AudioContent
+                        selectedNarrator={selectedNarrator}
+                        setSelectedNarrator={setSelectedNarrator}
+                        isPlaying={isPlaying}
+                        onPlayPause={handlePlayPause}
+                        isExpanded={isAudioExpanded}
+                        setIsExpanded={setIsAudioExpanded}
+                      />
+                    )}
+                    
+                    {type === 'comments' && (
+                      <CommentsContent
+                        comments={comments as any}
+                        aiSummary={aiSummary}
+                        summaryLoading={summaryLoading}
+                        onLikeComment={handleLikeComment}
+                        onAddComment={() => setContributionState('form')}
+                        isExpanded={isCommentsExpanded}
+                        setIsExpanded={setIsCommentsExpanded}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Navigation - 10% of screen */}
+      <div className="flex justify-center items-center px-4 flex-shrink-0" style={{ height: '5vh' }}>
+        <div className="flex bg-black/30 rounded-full p-1.5 backdrop-blur-sm border border-white/20">
+          {contentTypes.map((type, index) => {
+            const isActive = currentSlide === index;
+            return (
+              <button
+                key={type}
+                onClick={() => handleSlideChange(index)}
+                className={`w-12 h-8 rounded-full flex items-center justify-center transition-all duration-300 mx-1 ${
+                  isActive 
+                    ? 'bg-green-400 text-gray-900 shadow-lg scale-110 transform' 
+                    : 'text-white hover:bg-white/20 hover:scale-105'
+                }`}
+              >
+                {type === 'description' && <Book className="w-5 h-5" />}
+                {type === 'audio' && <Volume2 className="w-5 h-5" />}
+                {type === 'comments' && <MessageSquare className="w-5 h-5" />}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Contribution Modal Overlay */}
+      {contributionState === 'form' && (
+        <motion.div
+          className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50 p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setContributionState('none')}
+        >
+          <motion.div
+            className="bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-md max-h-[80vh] overflow-y-auto"
+            initial={{ y: '100%', scale: 0.95 }}
+            animate={{ y: 0, scale: 1 }}
+            exit={{ y: '100%', scale: 0.95 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ContributionForm
+              commentForm={commentForm}
+              setCommentForm={setCommentForm}
+              onSubmit={handleCommentSubmit}
+              onCancel={() => setContributionState('none')}
+            />
+          </motion.div>
+        </motion.div>
+      )}
+    </main>
+  );
+};
+
+
+// Contribution Form Component
+const ContributionForm: React.FC<{
+  commentForm: any;
+  setCommentForm: (form: any) => void;
+  onSubmit: () => void;
+  onCancel: () => void;
+}> = ({ commentForm, setCommentForm, onSubmit, onCancel }) => (
+  <div className="text-gray-900 p-6">
+    <div className="flex justify-center mb-4">
+      <div className="w-12 h-1 bg-gray-300 rounded-full" />
+    </div>
+    
+    <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center">
+        <User className="w-6 h-6 mr-3 text-gray-400" />
+        <h2 className="text-xl font-sf font-bold">Kontribusi Pada Karya Ini</h2>
+      </div>
+      <Button variant="ghost" size="sm" onClick={onCancel} className="p-2">
+        <ChevronUp className="w-4 h-4" />
+      </Button>
+    </div>
+
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-sf font-medium text-gray-700 mb-2">
+          Nama
+        </label>
+        <Input
+          value={commentForm.username}
+          onChange={(e) => setCommentForm({ ...commentForm, username: e.target.value })}
+          placeholder="Masukkan nama Anda"
+          className="w-full"
+        />
+        <button
+          onClick={() => setCommentForm({ ...commentForm, isAnonymous: !commentForm.isAnonymous })}
+          className="text-sm text-gray-500 hover:text-gray-700 mt-1"
+        >
+          Klik untuk jadi anonim
+        </button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-sf font-medium text-gray-700 mb-2">
+          Komentar
+        </label>
+        <Textarea
+          value={commentForm.comment}
+          onChange={(e) => setCommentForm({ ...commentForm, comment: e.target.value })}
+          placeholder="Bagikan pendapat Anda tentang karya ini..."
+          rows={4}
+          className="w-full"
+        />
+      </div>
+
+      <div className="flex gap-3 pt-4">
+        <Button
+          onClick={onCancel}
+          variant="outline"
+          className="flex-1 font-sf"
+        >
+          Batal
+        </Button>
+        <Button
+          onClick={onSubmit}
+          className="flex-1 bg-blue-600 hover:bg-blue-700 font-sf"
+        >
+          Kirim
+        </Button>
+      </div>
+    </div>
+  </div>
+);
+
+export default CollectionDetail;

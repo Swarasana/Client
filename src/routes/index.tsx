@@ -1,6 +1,6 @@
 import { Outlet, RouteObject, createBrowserRouter, useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { Explore, Profile, Search, Exhibition } from "@/pages";
+import { Explore, Profile, Search, Exhibition, Collection } from "@/pages";
 import { Footer, Navbar } from "@/components";
 import { motion } from "framer-motion";
 // import { AuthProvider } from "@/contexts/AuthContext";
@@ -62,6 +62,10 @@ const routes: RouteObject[] = [
             {
                 path: "/exhibition/:id",
                 element: <Exhibition />,
+            },
+            {
+                path: "/collection/:id",
+                element: <Collection />,
             }
         ],
     },

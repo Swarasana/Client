@@ -12,6 +12,10 @@ const ExhibitionDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
+  const handleCollectionClick = (collectionId: string) => {
+    navigate(`/collection/${collectionId}`);
+  };
+  
   // Fetch exhibition details
   const { data: exhibition, isLoading: exhibitionLoading, error: exhibitionError } = useQuery({
     queryKey: ['exhibition', id],
@@ -187,6 +191,7 @@ const ExhibitionDetail: React.FC = () => {
                 transition={{ duration: 0.5, delay: 0.9 + index * 0.1 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={() => handleCollectionClick(collection.id)}
               >
                 <ArtsyImagePlaceholder
                   src={collection.picture_url}
