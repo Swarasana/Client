@@ -87,7 +87,7 @@ const ExhibitionDetail: React.FC = () => {
         </div>
 
         {/* Hero Content */}
-        <div className="flex flex-col justify-end items-start px-4 pb-0 md:pb-20 pt-32 relative text-white">
+        <div className="flex flex-col justify-end items-start px-4 pb-20 pt-32 relative text-white">
           {exhibitionLoading ? (
             <div className="w-full">
               <div className="h-8 w-64 bg-white/20 rounded animate-pulse mb-2" />
@@ -134,24 +134,21 @@ const ExhibitionDetail: React.FC = () => {
           ) : null}
         </div>
 
-        {/* Simple Wave Separator */}
-        <div className="absolute -bottom-1 left-0 w-full overflow-hidden">
+        {/* Curved Semicircle Separator */}
+        <div className="absolute -bottom-[1px] left-0 w-full overflow-hidden">
           <svg
-            className="relative block w-full h-12"
+            className="relative block w-full h-8"
             xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 1200 120"
+            viewBox="0 0 1200 40"
             preserveAspectRatio="none"
           >
-            <path
-              d="M0,60C200,20 400,100 600,60C800,20 1000,100 1200,60L1200,120L0,120Z"
-              fill="white"
-            />
+            <path d="M0,0 Q100,40 200,0 Q300,40 400,0 Q500,40 600,0 Q700,40 800,0 Q900,40 1000,0 Q1100,40 1200,0 L1200,40 L0,40 Z" fill="white"/>
           </svg>
         </div>
       </div>
 
       {/* Collections Section */}
-      <div className="flex-1 bg-white px-4 py-8">
+      <div className="flex-1 bg-white px-4 py-8 pt-4">
         <motion.h2
           className="text-2xl font-sf font-bold text-gray-900 mb-6"
           initial={{ opacity: 0, y: 20 }}
