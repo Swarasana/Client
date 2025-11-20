@@ -15,6 +15,7 @@ import { collectionsApi, commentsApi } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState, ArtsyImagePlaceholder } from "@/components";
 import { useToast } from "@/hooks/use-toast";
 import DescriptionContent from "./DescriptionContent";
@@ -263,10 +264,10 @@ const CollectionDetail: React.FC = () => {
       {/* Collection Image - 45% of screen */}
       <div className="flex items-center justify-center px-4 flex-shrink-0 mb-4" style={{ height: '45vh' }}>
         {collectionLoading ? (
-          <div className="w-80 h-80 bg-white/10 rounded-3xl animate-pulse" />
+          <Skeleton className="w-72 h-72 bg-white/10 rounded-3xl" />
         ) : collection ? (
           <motion.div
-            className="relative w-72 h-72"
+            className="relative w-72 h-auto"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
@@ -311,35 +312,52 @@ const CollectionDetail: React.FC = () => {
                   }}
                 >
                   <div className="bg-white rounded-3xl p-4 shadow-lg w-full h-[90%] overflow-hidden">
-                    {type === 'description' && (
-                      <DescriptionContent 
-                        collection={collection}
-                        isExpanded={isDescriptionExpanded}
-                        setIsExpanded={setIsDescriptionExpanded}
-                      />
-                    )}
-                    
-                    {type === 'audio' && (
-                      <AudioContent
-                        selectedNarrator={selectedNarrator}
-                        setSelectedNarrator={setSelectedNarrator}
-                        isPlaying={isPlaying}
-                        onPlayPause={handlePlayPause}
-                        isExpanded={isAudioExpanded}
-                        setIsExpanded={setIsAudioExpanded}
-                      />
-                    )}
-                    
-                    {type === 'comments' && (
-                      <CommentsContent
-                        comments={(commentsData?.data || []) as any}
-                        aiSummary={aiSummary}
-                        summaryLoading={summaryLoading}
-                        onLikeComment={handleLikeComment}
-                        onAddComment={handleCommentSubmit}
-                        isExpanded={isCommentsExpanded}
-                        setIsExpanded={setIsCommentsExpanded}
-                      />
+                    {collectionLoading ? (
+                      // Skeleton loading for content cards
+                      <div className="flex flex-col h-full">
+                        <div className="flex items-center mb-3">
+                          <Skeleton className="w-5 h-5 mr-2" />
+                          <Skeleton className="h-5 w-32" />
+                        </div>
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-3/4" />
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        {type === 'description' && (
+                          <DescriptionContent 
+                            collection={collection}
+                            isExpanded={isDescriptionExpanded}
+                            setIsExpanded={setIsDescriptionExpanded}
+                          />
+                        )}
+                        
+                        {type === 'audio' && (
+                          <AudioContent
+                            selectedNarrator={selectedNarrator}
+                            setSelectedNarrator={setSelectedNarrator}
+                            isPlaying={isPlaying}
+                            onPlayPause={handlePlayPause}
+                            isExpanded={isAudioExpanded}
+                            setIsExpanded={setIsAudioExpanded}
+                          />
+                        )}
+                        
+                        {type === 'comments' && (
+                          <CommentsContent
+                            comments={(commentsData?.data || []) as any}
+                            aiSummary={aiSummary}
+                            summaryLoading={summaryLoading}
+                            onLikeComment={handleLikeComment}
+                            onAddComment={handleCommentSubmit}
+                            isExpanded={isCommentsExpanded}
+                            setIsExpanded={setIsCommentsExpanded}
+                          />
+                        )}
+                      </>
                     )}
                   </div>
                 </div>

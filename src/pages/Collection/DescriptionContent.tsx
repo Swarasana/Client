@@ -23,6 +23,24 @@ const DescriptionContent: React.FC<DescriptionContentProps> = ({
 }) => {
   const description = collection?.artist_explanation || "Miniatur ini menampilkan bentuk Gedung Sate pada tahap akhir pembangunannya dari udara. Terlihat dua fondasi di bagian belakang yang direncanakan sebagai lokasi menara antena radio telegraf, namun pembangunan tersebut tidak pernah selesai karena berbagai kendala teknis dan anggaran yang terbatas pada masa itu.";
   
+  // Function to estimate if title will be one or two lines
+  const getTitleLines = (title: string) => {
+    // Rough estimation: if title is longer than ~25 characters, it's likely 2 lines
+    const estimatedCharsPerLine = 30;
+    return title.length > estimatedCharsPerLine ? 2 : 1;
+  };
+
+  // Function to trim title to max 2 lines (rough estimation ~50 chars)
+  const trimTitle = (title: string, maxChars = 50) => {
+    if (title.length <= maxChars) return title;
+    return title.substring(0, maxChars).trim() + '...';
+  };
+
+  const title = collection?.name || 'Miniatur Gedung Sate';
+  const trimmedTitle = trimTitle(title);
+  const titleLines = getTitleLines(trimmedTitle);
+  const descriptionClamp = titleLines === 1 ? 'line-clamp-4' : 'line-clamp-3';
+  
   return (
     <Drawer open={isExpanded} onOpenChange={setIsExpanded}>
       <DrawerTrigger asChild>
@@ -30,14 +48,14 @@ const DescriptionContent: React.FC<DescriptionContentProps> = ({
           {/* Header */}
           <div className="flex items-center mb-3">
             <Book className="w-5 h-5 mr-2 text-gray-700" />
-            <h2 className="text-lg font-sf font-bold">
-              {collection?.name || 'Miniatur Gedung Sate'}
+            <h2 className="text-lg font-sf font-bold line-clamp-2">
+              {trimmedTitle}
             </h2>
           </div>
           
           {/* Preview content */}
           <div className="flex-1">
-            <p className="text-gray-700 text-base font-sf font-light line-clamp-4">
+            <p className={`text-gray-700 text-base font-sf font-light ${descriptionClamp}`}>
               {description}
             </p>
           </div>
@@ -50,7 +68,7 @@ const DescriptionContent: React.FC<DescriptionContentProps> = ({
             <div className="flex items-center">
               <Book className="w-6 h-6 mr-3 text-gray-700" />
               <DrawerTitle className="text-xl font-sf font-bold text-gray-900">
-                {collection?.name || 'Miniatur Gedung Sate'}
+                {title}
               </DrawerTitle>
             </div>
           </div>

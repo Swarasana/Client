@@ -3,6 +3,7 @@ import { MessageSquare, Volume2, Sparkles, ThumbsUp, ThumbsDown, ArrowLeft } fro
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Comment } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -39,6 +40,8 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
   const [previousStep, setPreviousStep] = useState<CommentStep>('collapsed');
   const [newComment, setNewComment] = useState({ name: '', comment: '' });
   const [isAnonymous, _] = useState(false);
+  const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
+  const [dislikedComments, setDislikedComments] = useState<Set<string>>(new Set());
 
   // Navigation direction tracking
   const getDirection = (from: CommentStep, to: CommentStep): 'forward' | 'back' => {
@@ -53,7 +56,7 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
     setCurrentStep(step);
   };
 
-  const aiSummaryText = aiSummary?.text || "Seru banget melihat miniatur ini, bikin aku ngerasa kalau Gedung Sate yang megah sekarang ternyata dulunya dibangun dengan detail yang rumit dan tahap...";
+  const aiSummaryText = aiSummary?.text;
 
   const handleSubmitComment = () => {
     if (newComment.comment.trim()) {
@@ -68,6 +71,25 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
     setPreviousStep(currentStep);
     setCurrentStep('collapsed');
     setIsExpanded(false);
+  };
+
+  const handleLikeComment = (commentId: string) => {
+    onLikeComment(commentId);
+    setLikedComments(prev => new Set(prev).add(commentId));
+    setDislikedComments(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(commentId);
+      return newSet;
+    });
+  };
+
+  const handleDislikeComment = (commentId: string) => {
+    setDislikedComments(prev => new Set(prev).add(commentId));
+    setLikedComments(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(commentId);
+      return newSet;
+    });
   };
 
   const isOpen = currentStep !== 'collapsed';
@@ -91,17 +113,30 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
               
               {/* AI Summary Preview */}
               <div className="flex-1">
-                <div className="flex items-center mb-2">
+                <div className="flex items-center mb-1">
                   <Sparkles className="w-4 h-4 mr-2 text-teal-600" />
-                  <span className="text-sm font-sf font-semibold text-teal-600">AI Summary</span>
-                  <Button variant="ghost" size="sm" className="ml-auto text-yellow-400 p-1">
+                  <span className="text-base font-sf font-semibold text-teal-600">AI Summary</span>
+                  <Button 
+                    size="sm" 
+                    className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full p-2 ml-auto"
+                  >
                     <Volume2 className="w-4 h-4" />
                   </Button>
                 </div>
-                <p className="text-gray-700 text-sm leading-relaxed line-clamp-3">
-                  {aiSummaryText}
-                </p>
-                <span className="text-gray-500 text-sm">...</span>
+                {summaryLoading || !aiSummaryText ? (
+                  <div className="space-y-2">
+                    <div className="h-4 w-full rounded bg-gradient-to-r from-teal-100 via-gray-100 to-gray-50 animate-pulse" />
+                    <div className="h-4 w-full rounded bg-gradient-to-r from-teal-100 via-gray-100 to-gray-50 animate-pulse" />
+                    <div className="h-4 w-3/4 rounded bg-gradient-to-r from-teal-100 via-gray-100 to-gray-50 animate-pulse" />
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-gray-700 text-base font-sf font-light line-clamp-3">
+                      {aiSummaryText}
+                    </p>
+                    <span className="text-gray-500 text-sm">...</span>
+                  </>
+                )}
               </div>
             </div>
           </DrawerTrigger>
@@ -114,7 +149,10 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
               aiSummaryText={aiSummaryText}
               summaryLoading={summaryLoading}
               comments={comments}
-              onLikeComment={onLikeComment}
+              onLikeComment={handleLikeComment}
+              onDislikeComment={handleDislikeComment}
+              likedComments={likedComments}
+              dislikedComments={dislikedComments}
               onContribute={() => navigateToStep('contribution')}
               onBack={(target) => navigateToStep(target)}
               newComment={newComment}
@@ -140,7 +178,10 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
               aiSummaryText={aiSummaryText}
               summaryLoading={summaryLoading}
               comments={comments}
-              onLikeComment={onLikeComment}
+              onLikeComment={handleLikeComment}
+              onDislikeComment={handleDislikeComment}
+              likedComments={likedComments}
+              dislikedComments={dislikedComments}
               onContribute={() => navigateToStep('contribution')}
               onBack={(target) => navigateToStep(target)}
               newComment={newComment}
@@ -164,6 +205,9 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
   summaryLoading: boolean;
   comments: Comment[];
   onLikeComment: (id: string) => void;
+  onDislikeComment: (id: string) => void;
+  likedComments: Set<string>;
+  dislikedComments: Set<string>;
   onContribute: () => void;
   onBack: (target: CommentStep) => void;
   newComment: { name: string; comment: string };
@@ -177,7 +221,10 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
   aiSummaryText, 
   summaryLoading, 
   comments, 
-  onLikeComment, 
+  onLikeComment,
+  onDislikeComment,
+  likedComments,
+  dislikedComments,
   onContribute, 
   onBack,
   newComment,
@@ -229,6 +276,9 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
             summaryLoading={summaryLoading}
             comments={comments}
             onLikeComment={onLikeComment}
+            onDislikeComment={onDislikeComment}
+            likedComments={likedComments}
+            dislikedComments={dislikedComments}
             onContribute={onContribute}
           />
         </div>
@@ -313,7 +363,7 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
               className="w-full p-4 bg-gray-100 hover:bg-gray-200 text-gray-900 rounded-lg"
             >
               <div className="text-center">
-                <div className="font-sf font-semibold text-lg">Komentar tanpa Akun?</div>
+                <div className="font-sf font-semibold text-lg">Komentar tanpa Akun</div>
               </div>
             </Button>
           </motion.div>
@@ -428,8 +478,11 @@ const CommentsList: React.FC<{
   summaryLoading: boolean;
   comments: Comment[];
   onLikeComment: (id: string) => void;
+  onDislikeComment: (id: string) => void;
+  likedComments: Set<string>;
+  dislikedComments: Set<string>;
   onContribute: () => void;
-}> = ({ aiSummaryText, summaryLoading, comments, onLikeComment, onContribute }) => (
+}> = ({ aiSummaryText, summaryLoading, comments, onLikeComment, onDislikeComment, likedComments, dislikedComments, onContribute }) => (
   <div className="flex flex-col h-full">
     <div className="flex-1 overflow-y-auto p-6 pb-0" style={{ minHeight: 0 }}>
       {/* AI Summary */}
@@ -456,11 +509,17 @@ const CommentsList: React.FC<{
           </Button>
         </motion.div>
       </div>
-      {summaryLoading ? (
-        <div className="h-16 bg-gray-200 animate-pulse rounded" />
+      {summaryLoading || !aiSummaryText ? (
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-4/5" />
+          <Skeleton className="h-4 w-3/5" />
+        </div>
       ) : (
         <motion.p 
-          className="text-gray-700 text-sm leading-relaxed"
+          className="text-gray-700 text-base font-sf font-light"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.1 }}
@@ -499,26 +558,40 @@ const CommentsList: React.FC<{
                 <Volume2 className="w-4 h-4 text-gray-400" />
               </motion.div>
             </div>
-            <p className="text-gray-700 text-sm mb-3 leading-relaxed">
+            <p className="text-gray-700 text-base mb-3 font-sf font-light">
               {comment.comment_text}
             </p>
             <div className="flex items-center gap-4">
               <motion.button
                 onClick={() => onLikeComment(comment.id)}
-                className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors"
+                className={`flex items-center gap-2 transition-colors ${
+                  likedComments.has(comment.id) 
+                    ? 'text-blue-600' 
+                    : 'text-gray-500 hover:text-blue-600'
+                }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <ThumbsUp className="w-4 h-4" />
+                <ThumbsUp 
+                  className="w-4 h-4" 
+                  fill={likedComments.has(comment.id) ? 'currentColor' : 'none'}
+                />
                 <span className="text-sm">{comment.likes_count || 0}</span>
               </motion.button>
               <motion.button 
-                className="flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors"
+                onClick={() => onDislikeComment(comment.id)}
+                className={`flex items-center gap-2 transition-colors ${
+                  dislikedComments.has(comment.id) 
+                    ? 'text-red-600' 
+                    : 'text-gray-500 hover:text-red-600'
+                }`}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <ThumbsDown className="w-4 h-4" />
-                <span className="text-sm">0</span>
+                <ThumbsDown 
+                  className="w-4 h-4" 
+                  fill={dislikedComments.has(comment.id) ? 'currentColor' : 'none'}
+                />
               </motion.button>
             </div>
           </motion.div>
