@@ -1,6 +1,14 @@
 import React from "react";
-import { Volume2, ChevronUp, Play, Pause } from "lucide-react";
+import { Volume2, Play, Pause } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 import anton from "@/assets/images/anton.png";
 import dede from "@/assets/images/dede.png";
 import eva from "@/assets/images/eva.png";
@@ -43,91 +51,240 @@ const AudioContent: React.FC<AudioContentProps> = ({
   onPlayPause, 
   isExpanded, 
   setIsExpanded 
-}) => (
-  <div className="text-gray-900 h-full flex flex-col">
-    {/* Header - Fixed */}
-    <div className="flex items-center justify-between mb-4 flex-shrink-0">
-      <h2 className="text-lg font-sf font-bold flex items-center">
-        <Volume2 className="w-4 h-4 mr-2" />
-        Narasi Audio
-      </h2>
-      <button 
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="p-1 hover:bg-gray-100 rounded transition-colors"
-      >
-        <ChevronUp className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
-      </button>
-    </div>
-
-    {/* Content - Fixed layout to fit card height */}
-    <div className="flex-1 flex flex-col">
-      <div className="mb-4">
-        <h3 className="text-sm font-sf font-semibold mb-2 text-gray-600">Dengarkan Pendapat Mereka</h3>
-        <p className="text-xs text-gray-700 mb-3">Hidupkan koleksi ini dari sudut pandang kurator maupun publik dengan suara pilihanmu</p>
-      </div>
-
-      {/* Expandable Character Selection */}
-      {isExpanded && (
-        <div className="mb-4 overflow-y-auto">
-          <h4 className="text-xs font-sf font-semibold mb-2 text-gray-600">Pilih Karakter Narator</h4>
-          <div className="flex gap-2 justify-center mb-4">
-            {audioCharacters.map((character) => (
-              <button
-                key={character.name}
-                onClick={() => setSelectedNarrator(character.name)}
-                className={`flex flex-col items-center p-2 rounded-lg transition-all ${
-                  selectedNarrator === character.name
-                    ? 'bg-blue-50 border border-blue-400'
-                    : 'hover:bg-gray-50'
-                }`}
-              >
-                <div className={`w-8 h-8 ${character.color} rounded-full flex items-center justify-center mb-1 overflow-hidden`}>
-                  <img 
-                    src={character.avatar} 
-                    alt={character.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <span className="text-xs font-sf font-medium">{character.name}</span>
-              </button>
-            ))}
+}) => {
+  const [selectedVersion, setSelectedVersion] = React.useState<string>('');
+  const [progress, setProgress] = React.useState<number>(0);
+  
+  // Audio simulation - 30 seconds total
+  const AUDIO_DURATION = 30000; // 30 seconds in ms
+  
+  // Check if form is complete
+  const isFormComplete = selectedNarrator && selectedVersion;
+  
+  // Audio progress simulation
+  React.useEffect(() => {
+    let interval: number;
+    
+    if (isPlaying && isFormComplete) {
+      interval = setInterval(() => {
+        setProgress(prev => {
+          const newProgress = prev + (100 / (AUDIO_DURATION / 100)); // Update every 100ms
+          if (newProgress >= 100) {
+            onPlayPause(); // Auto-stop when finished
+            return 100;
+          }
+          return newProgress;
+        });
+      }, 100);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isPlaying, isFormComplete, onPlayPause]);
+  
+  // Reset progress when stopping
+  React.useEffect(() => {
+    if (!isPlaying) {
+      // Small delay before resetting to show completion
+      const timeout = setTimeout(() => {
+        if (!isPlaying) setProgress(0);
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [isPlaying]);
+  
+  return (
+    <Drawer open={isExpanded} onOpenChange={setIsExpanded}>
+      <DrawerTrigger asChild>
+        <div className="text-gray-900 h-full flex flex-col cursor-pointer">
+          {/* Header */}
+          <div className="flex items-center mb-3">
+            <Volume2 className="w-5 h-5 mr-2 text-gray-700" />
+            <h2 className="text-lg font-sf font-bold">Narasi Audio</h2>
           </div>
           
-          <div className="space-y-2">
-            <div className="flex items-center p-2 bg-gray-50 rounded-lg">
-              <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
-              <span className="text-xs font-sf">Versi Kurator</span>
+          {/* Preview content */}
+          <div className="flex-1 flex">
+            {/* Left side - Content */}
+            <div className="flex-1">
+              <h3 className="text-base font-sf font-semibold mb-2 text-gray-900">Dengarkan Pendapat Mereka</h3>
+              <p className="text-gray-700 text-base font-sf font-light line-clamp-3">
+                Hidupkan koleksi ini dari sudut pandang kurator maupun publik dengan suara pilihanmu
+              </p>
             </div>
-            <div className="flex items-center p-2 bg-gray-50 rounded-lg">
-              <div className="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
-              <span className="text-xs font-sf">Versi Pengunjung</span>
+
+            {/* Right side - Play Button */}
+            <div className="flex items-center justify-center px-4 pr-2">
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isFormComplete) {
+                    onPlayPause();
+                  }
+                }}
+                disabled={!isFormComplete}
+                className={`rounded-full w-12 h-12 p-0 shadow-lg transition-all ${
+                  isFormComplete 
+                    ? 'bg-blue2 hover:bg-green-600 text-white' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {isPlaying ? (
+                  <Pause className="w-5 h-5" />
+                ) : (
+                  <Play className="w-5 h-5 ml-0.5" />
+                )}
+              </Button>
             </div>
           </div>
         </div>
-      )}
+      </DrawerTrigger>
+      
+      <DrawerContent className="max-h-[85vh]">
+        <DrawerHeader className="border-b border-gray-100 pl-6">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center">
+              <Volume2 className="w-6 h-6 mr-3 text-gray-700" />
+              <DrawerTitle className="text-xl font-sf font-bold text-gray-900">
+                Narasi Audio
+              </DrawerTitle>
+            </div>
+            {/* <Button 
+              size="sm" 
+              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full p-2"
+            >
+              <Volume2 className="w-4 h-4" />
+            </Button> */}
+          </div>
+          <DrawerDescription className="sr-only">
+            Pilih karakter narator dan dengarkan audio
+          </DrawerDescription>
+        </DrawerHeader>
 
-      {/* Play Button - Centered */}
-      <div className={`${isExpanded ? 'flex-shrink-0' : 'flex-1'} flex items-center justify-center`}>
-        <Button
-          onClick={onPlayPause}
-          className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full w-16 h-16 p-0 shadow-lg"
-        >
-          {isPlaying ? (
-            <Pause className="w-6 h-6" />
-          ) : (
-            <Play className="w-6 h-6 ml-1" />
-          )}
-        </Button>
-      </div>
+        <div className="p-6 overflow-y-auto">
+          {/* Character Narrator Section */}
+          <div className="mb-6">
+            <h3 className="text-lg font-inter font-semibold text-gray-900 mb-4">Karakter Narator</h3>
+            <div className="flex gap-6 justify-center">
+              {audioCharacters.map((character) => (
+                <button
+                  key={character.name}
+                  onClick={() => setSelectedNarrator(character.name)}
+                  className={`flex flex-col items-center transition-all ${
+                    selectedNarrator === character.name ? 'scale-110' : 'hover:scale-105'
+                  }`}
+                >
+                  <div className={`w-20 h-20 ${character.color} rounded-full flex items-center justify-center mb-2 overflow-hidden ${
+                    selectedNarrator === character.name ? 'ring-4 ring-blue-400 ring-opacity-50' : ''
+                  }`}>
+                    <img 
+                      src={character.avatar} 
+                      alt={character.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <span className="text-sm font-sf font-medium text-gray-900">{character.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* Progress Bar */}
-      <div className="mt-4 flex-shrink-0">
-        <div className="w-full bg-gray-200 h-1 rounded-full">
-          <div className="bg-blue-500 h-1 rounded-full" style={{ width: '0%' }}></div>
+          {/* Version Selection - Radio Form */}
+          <div className="mb-6">
+            <h3 className="text-lg font-inter font-semibold text-gray-900 mb-4">Pilih Narasi</h3>
+            <div className="space-y-3">
+              <button 
+                onClick={() => setSelectedVersion('kurator')}
+                className={`w-full flex items-center p-3 rounded-lg transition-colors ${
+                  selectedVersion === 'kurator' 
+                    ? 'bg-blue-50 border border-blue-400' 
+                    : 'bg-gray-50 hover:bg-gray-100'
+                }`}
+              >
+                <div className={`w-4 h-4 rounded-full mr-3 border-2 flex items-center justify-center ${
+                  selectedVersion === 'kurator' 
+                    ? 'border-blue-400 bg-blue-400' 
+                    : 'border-gray-400 bg-white'
+                }`}>
+                  {selectedVersion === 'kurator' && (
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  )}
+                </div>
+                <span className="text-base font-sf text-gray-900">Versi Kurator</span>
+              </button>
+              <button 
+                onClick={() => setSelectedVersion('pengunjung')}
+                className={`w-full flex items-center p-3 rounded-lg transition-colors ${
+                  selectedVersion === 'pengunjung' 
+                    ? 'bg-blue-50 border border-blue-400' 
+                    : 'bg-gray-50 hover:bg-gray-100'
+                }`}
+              >
+                <div className={`w-4 h-4 rounded-full mr-3 border-2 flex items-center justify-center ${
+                  selectedVersion === 'pengunjung' 
+                    ? 'border-blue-400 bg-blue-400' 
+                    : 'border-gray-400 bg-white'
+                }`}>
+                  {selectedVersion === 'pengunjung' && (
+                    <div className="w-2 h-2 bg-white rounded-full"></div>
+                  )}
+                </div>
+                <span className="text-base font-sf text-gray-900">Versi Pengunjung</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Audio Controls */}
+          <div className="space-y-4">
+            {/* Progress Bar */}
+            <div className="w-full">
+              <div className="w-full bg-gray-200 h-2 rounded-full">
+                <div 
+                  className="bg-gray-900 h-2 rounded-full transition-all duration-100 ease-linear" 
+                  style={{ width: `${progress}%` }}
+                ></div>
+              </div>
+            </div>
+            
+            {/* Time display */}
+            <div className="flex justify-between text-xs text-gray-500 font-sf">
+              <span>0:{String(Math.floor((progress / 100) * 30)).padStart(2, '0')}</span>
+              <span>0:30</span>
+            </div>
+            
+            {/* Play Button */}
+            <div className="flex justify-center">
+              <Button
+                onClick={onPlayPause}
+                disabled={!isFormComplete}
+                className={`rounded-full w-16 h-16 p-0 shadow-lg transition-all ${
+                  isFormComplete 
+                    ? 'bg-blue2 hover:bg-green-600 text-white' 
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {isPlaying ? (
+                  <Pause className="w-8 h-8" />
+                ) : (
+                  <Play className="w-8 h-8 ml-1" />
+                )}
+              </Button>
+            </div>
+            
+            {/* Form validation message */}
+            {!isFormComplete && (
+              <div className="text-center">
+                <p className="text-sm text-gray-500 font-sf">
+                  Pilih karakter narator dan versi narasi untuk memutar audio
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-);
+      </DrawerContent>
+    </Drawer>
+  );
+};
 
 export default AudioContent;
