@@ -7,7 +7,7 @@ import { exhibitionsApi } from "@/api";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState, ExhibitionCard } from "@/components";
+import { ExhibitionCard } from "@/components";
 
 import title from "@/assets/logos/title.png"
 import topDecor from "@/assets/images/top-decor.png";
@@ -23,7 +23,7 @@ const Explore: React.FC = () => {
     const autoScrollRef = useRef<number | null>(null);
 
     // Fetch exhibitions data
-    const { data: exhibitionsData, isLoading, error, refetch } = useQuery({
+    const { data: exhibitionsData, isLoading } = useQuery({
         queryKey: ['exhibitions'],
         queryFn: () => exhibitionsApi.getAll({ cursor: null, limit: '8' }),
         retry: 3,
@@ -106,26 +106,6 @@ const Explore: React.FC = () => {
             </CardContent>
         </Card>
     );
-
-    if (error) {
-        // Determine error type based on error message
-        let errorType: "network" | "server" | "generic" = "generic";
-        if (error.message.toLowerCase().includes('network') || error.message.toLowerCase().includes('fetch')) {
-            errorType = "network";
-        } else if (error.message.toLowerCase().includes('server') || error.message.toLowerCase().includes('500')) {
-            errorType = "server";
-        }
-
-        return (
-            <ErrorState
-                type={errorType}
-                title="Gagal Memuat Pameran"
-                message="Tidak dapat memuat daftar pameran saat ini. Silakan coba lagi dalam beberapa saat."
-                onRetry={() => refetch()}
-                fullPage={true}
-            />
-        );
-    }
 
     return (
         <main className="flex flex-col w-full min-h-screen bg-gradient-to-b from-blue1 via-blue1 to-blue2 text-white relative overflow-hidden">

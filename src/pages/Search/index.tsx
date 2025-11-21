@@ -5,7 +5,7 @@ import { Search, Filter, ChevronLeft, Loader2 } from "lucide-react";
 import { exhibitionsApi } from "@/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ExhibitionCard, ErrorState } from "@/components";
+import { ExhibitionCard } from "@/components";
 import { Exhibition } from "@/types";
 
 const SearchPage: React.FC = () => {
@@ -35,9 +35,7 @@ const SearchPage: React.FC = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading,
-    error,
-    refetch
+    isLoading
   } = useInfiniteQuery({
     queryKey: ['exhibitions-search', debouncedQuery],
     queryFn: ({ pageParam }: { pageParam: string | null }) => exhibitionsApi.getAll({
@@ -84,25 +82,6 @@ const SearchPage: React.FC = () => {
            exhibition?.description?.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
            exhibition?.location?.toLowerCase().includes(debouncedQuery.toLowerCase());
   });
-
-  if (error) {
-    let errorType: "network" | "server" | "generic" = "generic";
-    if (error.message.toLowerCase().includes('network') || error.message.toLowerCase().includes('fetch')) {
-      errorType = "network";
-    } else if (error.message.toLowerCase().includes('server') || error.message.toLowerCase().includes('500')) {
-      errorType = "server";
-    }
-
-    return (
-      <ErrorState
-        type={errorType}
-        title="Gagal Memuat Hasil Pencarian"
-        message="Tidak dapat memuat hasil pencarian saat ini. Silakan coba lagi dalam beberapa saat."
-        onRetry={() => refetch()}
-        fullPage={true}
-      />
-    );
-  }
 
   return (
     <main className="flex flex-col w-full min-h-screen bg-blue1 text-white">

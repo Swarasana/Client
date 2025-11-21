@@ -11,7 +11,7 @@ import {
 import { collectionsApi } from "@/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState, ClickableImage } from "@/components";
+import { ClickableImage } from "@/components";
 import { useToast } from "@/hooks/use-toast";
 import DescriptionContent from "./DescriptionContent";
 import AudioContent from "./AudioContent";
@@ -40,7 +40,7 @@ const CollectionDetail: React.FC = () => {
   const contentTypes: ContentType[] = ['description', 'audio', 'comments'];
 
   // Fetch collection details
-  const { data: collection, isLoading: collectionLoading, error: collectionError } = useQuery({
+  const { data: collection, isLoading: collectionLoading } = useQuery({
     queryKey: ['collection', id],
     queryFn: () => collectionsApi.getById(id!),
     enabled: !!id,
@@ -93,25 +93,6 @@ const CollectionDetail: React.FC = () => {
       }
     }, 1000);
   };
-
-  if (collectionError) {
-    let errorType: "network" | "server" | "generic" = "generic";
-    if (collectionError.message.toLowerCase().includes('network')) {
-      errorType = "network";
-    } else if (collectionError.message.toLowerCase().includes('server')) {
-      errorType = "server";
-    }
-
-    return (
-      <ErrorState
-        type={errorType}
-        title="Gagal Memuat Detail Koleksi"
-        message="Tidak dapat memuat detail koleksi saat ini. Silakan coba lagi dalam beberapa saat."
-        onRetry={() => window.location.reload()}
-        fullPage={true}
-      />
-    );
-  }
 
   const slideRef = useRef<HTMLDivElement>(null);
   
