@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { userApi } from "@/api";
 import { useNavigate } from "react-router-dom";
+import headerPattern from "@/assets/images/header-pattern.svg";
 
 const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -30,29 +31,43 @@ const Login: React.FC = () => {
             navigate(`/`);
         } catch (err: any) {
             console.error(err);
-            setError(err?.response?.data?.message || "Login failed");
+            setError(err?.response?.data?.message || "Login gagal");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <main className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue-100 to-blue-200">
+        <main className="flex items-center justify-center min-h-screen bg-gradient-to-b from-blue1 via-blue1 to-[#1371AB] overflow-hidden">
+            <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0]">
+                <img
+                    src={headerPattern}
+                    alt="Motif latar belakang"
+                    className="w-full"
+                />
+            </div>
+
             <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
-                className="w-full max-w-sm bg-white shadow-xl rounded-2xl p-8"
+                className="w-full max-w-sm bg-white shadow-xl rounded-3xl p-7"
             >
-                <h1 className="text-2xl font-bold text-center mb-6">Login</h1>
+                <h1 className="text-3xl font-sf font-bold text-center text-blue1 mb-6">
+                    Login
+                </h1>
 
-                <form onSubmit={handleLogin} className="space-y-4">
+                <form
+                    onSubmit={handleLogin}
+                    className="flex flex-col items-center space-y-5"
+                >
                     <Input
                         type="text"
                         placeholder="Username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="bg-gray-100"
+                        className="w-full py-6 pl-4 pr-2 border-none rounded-md bg-gray-100 font-sf text-lg"
+                        required
                     />
 
                     <Input
@@ -60,18 +75,21 @@ const Login: React.FC = () => {
                         placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="bg-gray-100"
+                        className="w-full py-6 pl-4 pr-2 border-none rounded-md bg-gray-100 font-sf text-lg"
+                        required
                     />
 
                     {error && (
-                        <p className="text-red-500 text-sm text-center">{error}</p>
+                        <p className="w-full font-sf text-red-500 text-sm text-start pb-2 pl-2">
+                            {error}
+                        </p>
                     )}
 
-                    <p>
+                    <p className="w-full flex flex-row justify-center gap-1 pb-2 font-sf text-blue2 text-sm">
                         Belum punya akun?{" "}
                         <a
                             onClick={() => navigate("/register")}
-                            className="text-blue-600 cursor-pointer hover:underline"
+                            className="font-bold"
                         >
                             Daftar akun baru
                         </a>
@@ -79,7 +97,7 @@ const Login: React.FC = () => {
 
                     <Button
                         type="submit"
-                        className="w-full"
+                        className="bg-yellow-400 hover:bg-yellow-500 font-sf font-semibold text-gray-900 text-xl rounded-full py-6 px-12"
                         disabled={loading}
                     >
                         {loading ? "Loading..." : "Login"}
@@ -88,6 +106,6 @@ const Login: React.FC = () => {
             </motion.div>
         </main>
     );
-}
+};
 
 export default Login;
