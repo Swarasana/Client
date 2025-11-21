@@ -4,5 +4,6 @@ import SplashScreen from "./SplashScreen";
 import ErrorState from "./ErrorState";
 import ExhibitionCard from "./ExhibitionCard";
 import ArtsyImagePlaceholder from "./ArtsyImagePlaceholder";
+import ClickableImage from "./ClickableImage";
 
-export { Navbar, Footer, SplashScreen, ErrorState, ExhibitionCard, ArtsyImagePlaceholder };
+export { Navbar, Footer, SplashScreen, ErrorState, ExhibitionCard, ArtsyImagePlaceholder, ClickableImage };
