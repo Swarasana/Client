@@ -1,8 +1,9 @@
 import { Outlet, RouteObject, createBrowserRouter, useLocation } from "react-router-dom";
 import { useEffect } from "react";
-import { Explore, Profile, Search, Exhibition, Collection } from "@/pages";
+import { Explore, Profile, Search, Exhibition, Collection, Login } from "@/pages";
 import { Footer, Navbar } from "@/components";
 import { motion } from "framer-motion";
+import Register from "@/pages/Register";
 // import { AuthProvider } from "@/contexts/AuthContext";
 
 const MainLayout = () => {
@@ -54,6 +55,14 @@ const routes: RouteObject[] = [
             {
                 path: "/profile",
                 element: <Profile />,
+            },
+            {
+                path: "/login",
+                element: <Login />,
+            },
+            {
+                path: "/register",
+                element: <Register />,
             },
             {
                 path: "/search",

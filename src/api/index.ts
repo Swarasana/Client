@@ -1,96 +1,161 @@
-import { AxiosInstance } from 'axios'
-import { Collection, CursorPagination, Exhibition, PaginatedResponse, VisitorCount, TrackVisit, TrendingCollection, VisitorAnalytics } from '@/types'
-import { api, APIService } from './base'
-
+import { AxiosInstance } from "axios";
+import {
+    Collection,
+    CursorPagination,
+    Exhibition,
+    PaginatedResponse,
+    VisitorCount,
+    TrackVisit,
+    TrendingCollection,
+    VisitorAnalytics,
+    User,
+} from "@/types";
+import { api, APIService } from "./base";
 
 // 1. Collections API
 export class CollectionsService extends APIService {
     constructor(apiInstance: AxiosInstance) {
-        super(apiInstance, 'collections')
+        super(apiInstance, "collections");
     }
 
     getById(id: string): Promise<Collection> {
-        return this.get<Collection>(`/${id}`)
+        return this.get<Collection>(`/${id}`);
     }
 
-    getComments(id: string, pagination: CursorPagination): Promise<PaginatedResponse<Comment>> {
-        return this.get<PaginatedResponse<Comment>>(`/${id}/comments`, pagination)
+    getComments(
+        id: string,
+        pagination: CursorPagination
+    ): Promise<PaginatedResponse<Comment>> {
+        return this.get<PaginatedResponse<Comment>>(
+            `/${id}/comments`,
+            pagination
+        );
     }
 
-    addComment(id: string, data: { username: string | null; user_pic_url: string | null; comment_text: string }): Promise<Comment> {
-        return this.post<Comment>(`/${id}/comments`, data) 
+    addComment(
+        id: string,
+        data: {
+            username: string | null;
+            user_pic_url: string | null;
+            comment_text: string;
+        }
+    ): Promise<Comment> {
+        return this.post<Comment>(`/${id}/comments`, data);
     }
 
     like(id: string): Promise<Collection> {
-        return this.put<Collection>(`/${id}/like`)
+        return this.put<Collection>(`/${id}/like`);
     }
 
     getAISummary(id: string): Promise<{ text: string }> {
-        return this.get<{ text: string }>(`/${id}/ai-summary`)
+        return this.get<{ text: string }>(`/${id}/ai-summary`);
     }
 }
 
 // 2. Comments API
 export class CommentsService extends APIService {
     constructor(apiInstance: AxiosInstance) {
-        super(apiInstance, 'comments')
+        super(apiInstance, "comments");
     }
 
     like(id: string): Promise<Comment> {
-        return this.put<Comment>(`/${id}/like`)
+        return this.put<Comment>(`/${id}/like`);
     }
 
     getText(id: string): Promise<{ text: string }> {
-        return this.get<{ text: string }>(`/${id}/text`)
+        return this.get<{ text: string }>(`/${id}/text`);
     }
 }
 
 // 3. Exhibitions API
 export class ExhibitionsService extends APIService {
     constructor(apiInstance: AxiosInstance) {
-        super(apiInstance, 'exhibitions')
+        super(apiInstance, "exhibitions");
     }
 
-    getAll(pagination: CursorPagination): Promise<PaginatedResponse<Exhibition>> {
-        return this.get<PaginatedResponse<Exhibition>>('', pagination)
+    getAll(
+        pagination: CursorPagination
+    ): Promise<PaginatedResponse<Exhibition>> {
+        return this.get<PaginatedResponse<Exhibition>>("", pagination);
     }
 
     getById(id: string): Promise<Exhibition> {
-        return this.get<Exhibition>(`/${id}`)
+        return this.get<Exhibition>(`/${id}`);
     }
 
-    getCollections(id: string, pagination: CursorPagination): Promise<PaginatedResponse<Collection>> {
-        return this.get<PaginatedResponse<Collection>>(`/${id}/collections`, pagination)
+    getCollections(
+        id: string,
+        pagination: CursorPagination
+    ): Promise<PaginatedResponse<Collection>> {
+        return this.get<PaginatedResponse<Collection>>(
+            `/${id}/collections`,
+            pagination
+        );
     }
 }
 
 // 4. Visitors API
 export class VisitorsService extends APIService {
     constructor(apiInstance: AxiosInstance) {
-        super(apiInstance, 'visitors')
+        super(apiInstance, "visitors");
     }
 
     getVisitorCount(collectionId: string): Promise<VisitorCount> {
-        return this.get<VisitorCount>(`/collections/${collectionId}/visitor-count`)
+        return this.get<VisitorCount>(
+            `/collections/${collectionId}/visitor-count`
+        );
     }
 
     trackVisit(collectionId: string, sessionId?: string): Promise<TrackVisit> {
-        return this.post<TrackVisit>(`/collections/${collectionId}/visit`, sessionId ? { session_id: sessionId } : {})
+        return this.post<TrackVisit>(
+            `/collections/${collectionId}/visit`,
+            sessionId ? { session_id: sessionId } : {}
+        );
     }
 
-    getTrending(limit: number = 10): Promise<{ trending: TrendingCollection[] }> {
-        return this.get<{ trending: TrendingCollection[] }>(`/trending?limit=${limit}`)
+    getTrending(
+        limit: number = 10
+    ): Promise<{ trending: TrendingCollection[] }> {
+        return this.get<{ trending: TrendingCollection[] }>(
+            `/trending?limit=${limit}`
+        );
     }
 
     getAnalytics(collectionId: string): Promise<VisitorAnalytics> {
-        return this.get<VisitorAnalytics>(`/collections/${collectionId}/analytics`)
+        return this.get<VisitorAnalytics>(
+            `/collections/${collectionId}/analytics`
+        );
     }
 }
 
+// 5. Users API
+export class UserService extends APIService {
+    constructor(apiInstance: AxiosInstance) {
+        super(apiInstance, "users");
+    }
 
+    async login(data: {
+        username: string;
+        password: string;
+    }): Promise<{ token: string }> {
+        const res = await api.post("/users/login", data);
+        return res.data;
+    }
+
+    async register(data: {
+        username: string;
+        password: string;
+        display_name: string;
+        role: string;
+    }) {
+        const res = await api.post("users/register", data);
+        return res.data;
+    }
+}
 
 // Initialize and Export API Objects
-export const collectionsApi = new CollectionsService(api)
-export const commentsApi = new CommentsService(api)
-export const exhibitionsApi = new ExhibitionsService(api)
-export const visitorsApi = new VisitorsService(api)
+export const collectionsApi = new CollectionsService(api);
+export const commentsApi = new CommentsService(api);
+export const exhibitionsApi = new ExhibitionsService(api);
+export const visitorsApi = new VisitorsService(api);
+export const userApi = new UserService(api);
