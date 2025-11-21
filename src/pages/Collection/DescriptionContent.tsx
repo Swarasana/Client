@@ -1,6 +1,7 @@
 import React from "react";
 import { Book, Sparkles } from "lucide-react";
 import { Collection } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Drawer,
   DrawerContent,
@@ -21,8 +22,6 @@ const DescriptionContent: React.FC<DescriptionContentProps> = ({
   isExpanded, 
   setIsExpanded 
 }) => {
-  const description = collection?.artist_explanation || "Miniatur ini menampilkan bentuk Gedung Sate pada tahap akhir pembangunannya dari udara. Terlihat dua fondasi di bagian belakang yang direncanakan sebagai lokasi menara antena radio telegraf, namun pembangunan tersebut tidak pernah selesai karena berbagai kendala teknis dan anggaran yang terbatas pada masa itu.";
-  
   // Function to estimate if title will be one or two lines
   const getTitleLines = (title: string) => {
     // Rough estimation: if title is longer than ~25 characters, it's likely 2 lines
@@ -36,7 +35,28 @@ const DescriptionContent: React.FC<DescriptionContentProps> = ({
     return title.substring(0, maxChars).trim() + '...';
   };
 
-  const title = collection?.name || 'Miniatur Gedung Sate';
+  if (!collection) {
+    // Show skeleton loading when collection data is not available
+    return (
+      <div className="text-gray-900 h-full flex flex-col">
+        {/* Header Skeleton */}
+        <div className="flex items-center mb-3">
+          <Skeleton className="w-5 h-5 mr-2" />
+          <Skeleton className="h-5 w-32" />
+        </div>
+        
+        {/* Preview content skeleton */}
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+        </div>
+      </div>
+    );
+  }
+
+  const title = collection.name;
+  const description = collection.artist_explanation;
   const trimmedTitle = trimTitle(title);
   const titleLines = getTitleLines(trimmedTitle);
   const descriptionClamp = titleLines === 1 ? 'line-clamp-4' : 'line-clamp-3';

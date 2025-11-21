@@ -7,15 +7,11 @@ import {
   Share2,
   Volume2,
   MessageSquare,
-  User,
-  ChevronUp,
   Book,
   Heart
 } from "lucide-react";
-import { collectionsApi, commentsApi } from "@/api";
+import { collectionsApi } from "@/api";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Dialog,
@@ -32,7 +28,6 @@ import CommentsContent from "./CommentsContent";
 
 
 type ContentType = 'description' | 'audio' | 'comments';
-type ContributionState = 'none' | 'form' | 'submitting';
 
 // Component to track if image is actually loaded or showing placeholder
 const ClickableImage: React.FC<{
@@ -184,7 +179,6 @@ const CollectionDetail: React.FC = () => {
   
   // State management
   const [currentSlide, setCurrentSlide] = useState<number>(0);
-  const [contributionState, setContributionState] = useState<ContributionState>('none');
   
   // Like state
   const [isLiked, setIsLiked] = useState(false);
@@ -196,13 +190,6 @@ const CollectionDetail: React.FC = () => {
   const [isCommentsExpanded, setIsCommentsExpanded] = useState(false);
   
   const contentTypes: ContentType[] = ['description', 'audio', 'comments'];
-  const [selectedNarrator, setSelectedNarrator] = useState<string>('Anton');
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [commentForm, setCommentForm] = useState({
-    username: '',
-    comment: '',
-    isAnonymous: false
-  });
 
   // Fetch collection details
   const { data: collection, isLoading: collectionLoading, error: collectionError } = useQuery({
@@ -211,24 +198,6 @@ const CollectionDetail: React.FC = () => {
     enabled: !!id,
     retry: 3,
     staleTime: 5 * 60 * 1000,
-  });
-
-  // Fetch comments for this collection
-  const { data: commentsData, isLoading: _ } = useQuery({
-    queryKey: ['collection-comments', id],
-    queryFn: () => collectionsApi.getComments(id!, { cursor: null, limit: '10' }),
-    enabled: !!id,
-    retry: 3,
-    staleTime: 2 * 60 * 1000,
-  });
-
-  // Fetch AI Summary
-  const { data: aiSummary, isLoading: summaryLoading } = useQuery({
-    queryKey: ['collection-ai-summary', id],
-    queryFn: () => collectionsApi.getAISummary(id!),
-    enabled: !!id && currentSlide === 1, // Comments is index 2
-    retry: 3,
-    staleTime: 10 * 60 * 1000,
   });
 
   // Initialize likes count from collection data
@@ -295,75 +264,6 @@ const CollectionDetail: React.FC = () => {
       />
     );
   }
-
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    // TODO: Implement actual audio playback
-  };
-
-  // React Query mutations
-  const addCommentMutation = useMutation({
-    mutationFn: async (commentData: { name: string; comment: string }) => {
-      if (!id) throw new Error('No collection ID');
-      return collectionsApi.addComment(id, {
-        username: commentData.name || null,
-        user_pic_url: null,
-        comment_text: commentData.comment
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Komentar terkirim!",
-        description: "Terima kasih atas kontribusi Anda",
-        duration: 2000,
-      });
-      // Invalidate comments to refresh the list
-      queryClient.invalidateQueries({ queryKey: ['collection-comments', id] });
-      setContributionState('none');
-      setCommentForm({ username: '', comment: '', isAnonymous: false });
-    },
-    onError: (error) => {
-      console.error('Error submitting comment:', error);
-      toast({
-        title: "Gagal mengirim komentar",
-        description: "Silakan coba lagi",
-        variant: "destructive",
-        duration: 2000,
-      });
-    }
-  });
-
-  const likeCommentMutation = useMutation({
-    mutationFn: async (commentId: string) => {
-      return commentsApi.like(commentId);
-    },
-    onSuccess: () => {
-      toast({
-        title: "Komentar disukai!",
-        description: "Terima kasih atas apresiasi Anda",
-        duration: 2000,
-      });
-      // Invalidate comments to refresh like counts immediately
-      queryClient.invalidateQueries({ queryKey: ['collection-comments', id] });
-    },
-    onError: (error) => {
-      console.error('Error liking comment:', error);
-      toast({
-        title: "Gagal menyukai komentar",
-        description: "Silakan coba lagi",
-        variant: "destructive",
-        duration: 2000,
-      });
-    }
-  });
-
-  const handleCommentSubmit = async (commentData: { name: string; comment: string }) => {
-    addCommentMutation.mutate(commentData);
-  };
-
-  const handleLikeComment = (commentId: string) => {
-    likeCommentMutation.mutate(commentId);
-  };
 
   const slideRef = useRef<HTMLDivElement>(null);
   
@@ -541,10 +441,6 @@ const CollectionDetail: React.FC = () => {
                         
                         {type === 'audio' && (
                           <AudioContent
-                            selectedNarrator={selectedNarrator}
-                            setSelectedNarrator={setSelectedNarrator}
-                            isPlaying={isPlaying}
-                            onPlayPause={handlePlayPause}
                             isExpanded={isAudioExpanded}
                             setIsExpanded={setIsAudioExpanded}
                           />
@@ -552,11 +448,7 @@ const CollectionDetail: React.FC = () => {
                         
                         {type === 'comments' && (
                           <CommentsContent
-                            comments={(commentsData?.data || []) as any}
-                            aiSummary={aiSummary}
-                            summaryLoading={summaryLoading}
-                            onLikeComment={handleLikeComment}
-                            onAddComment={handleCommentSubmit}
+                            collectionId={id!}
                             isExpanded={isCommentsExpanded}
                             setIsExpanded={setIsCommentsExpanded}
                           />
@@ -594,108 +486,9 @@ const CollectionDetail: React.FC = () => {
           })}
         </div>
       </div>
-
-      {/* Contribution Modal Overlay */}
-      {contributionState === 'form' && (
-        <motion.div
-          className="fixed inset-0 bg-black/50 flex items-end md:items-center justify-center z-50 p-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setContributionState('none')}
-        >
-          <motion.div
-            className="bg-white rounded-t-3xl md:rounded-3xl w-full md:max-w-md max-h-[80vh] overflow-y-auto"
-            initial={{ y: '100%', scale: 0.95 }}
-            animate={{ y: 0, scale: 1 }}
-            exit={{ y: '100%', scale: 0.95 }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ContributionForm
-              commentForm={commentForm}
-              setCommentForm={setCommentForm}
-              onSubmit={handleCommentSubmit}
-              onCancel={() => setContributionState('none')}
-            />
-          </motion.div>
-        </motion.div>
-      )}
     </main>
   );
 };
 
-
-// Contribution Form Component
-const ContributionForm: React.FC<{
-  commentForm: any;
-  setCommentForm: (form: any) => void;
-  onSubmit: (commentData: { name: string; comment: string }) => void;
-  onCancel: () => void;
-}> = ({ commentForm, setCommentForm, onSubmit, onCancel }) => (
-  <div className="text-gray-900 p-6">
-    <div className="flex justify-center mb-4">
-      <div className="w-12 h-1 bg-gray-300 rounded-full" />
-    </div>
-    
-    <div className="flex items-center justify-between mb-6">
-      <div className="flex items-center">
-        <User className="w-6 h-6 mr-3 text-gray-400" />
-        <h2 className="text-xl font-sf font-bold">Kontribusi Pada Karya Ini</h2>
-      </div>
-      <Button variant="ghost" size="sm" onClick={onCancel} className="p-2">
-        <ChevronUp className="w-4 h-4" />
-      </Button>
-    </div>
-
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-sf font-medium text-gray-700 mb-2">
-          Nama
-        </label>
-        <Input
-          value={commentForm.username}
-          onChange={(e) => setCommentForm({ ...commentForm, username: e.target.value })}
-          placeholder="Masukkan nama Anda"
-          className="w-full"
-        />
-        <button
-          onClick={() => setCommentForm({ ...commentForm, isAnonymous: !commentForm.isAnonymous })}
-          className="text-sm text-gray-500 hover:text-gray-700 mt-1"
-        >
-          Klik untuk jadi anonim
-        </button>
-      </div>
-
-      <div>
-        <label className="block text-sm font-sf font-medium text-gray-700 mb-2">
-          Komentar
-        </label>
-        <Textarea
-          value={commentForm.comment}
-          onChange={(e) => setCommentForm({ ...commentForm, comment: e.target.value })}
-          placeholder="Bagikan pendapat Anda tentang karya ini..."
-          rows={4}
-          className="w-full"
-        />
-      </div>
-
-      <div className="flex gap-3 pt-4">
-        <Button
-          onClick={onCancel}
-          variant="outline"
-          className="flex-1 font-sf"
-        >
-          Batal
-        </Button>
-        <Button
-          onClick={() => onSubmit({ name: commentForm.username, comment: commentForm.comment })}
-          className="flex-1 bg-blue-600 hover:bg-blue-700 font-sf"
-        >
-          Kirim
-        </Button>
-      </div>
-    </div>
-  </div>
-);
 
 export default CollectionDetail;

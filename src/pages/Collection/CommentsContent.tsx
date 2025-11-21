@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { MessageSquare, Volume2, Sparkles, ThumbsUp, ThumbsDown, ArrowLeft } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,6 +8,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Comment } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
+import { formatDateTime } from "@/lib/utils";
+import { collectionsApi, commentsApi } from "@/api";
+import { useToast } from "@/hooks/use-toast";
 import {
   Drawer,
   DrawerContent,
@@ -17,11 +21,7 @@ import {
 } from "@/components/ui/drawer";
 
 interface CommentsContentProps {
-  comments: Comment[];
-  aiSummary: any;
-  summaryLoading: boolean;
-  onLikeComment: (commentId: string) => void;
-  onAddComment: (commentData: { name: string; comment: string }) => void;
+  collectionId: string;
   isExpanded: boolean;
   setIsExpanded: (expanded: boolean) => void;
 }
@@ -29,20 +29,103 @@ interface CommentsContentProps {
 type CommentStep = 'collapsed' | 'list' | 'contribution' | 'form';
 
 const CommentsContent: React.FC<CommentsContentProps> = ({ 
-  comments, 
-  aiSummary, 
-  summaryLoading, 
-  onLikeComment, 
-  onAddComment, 
+  collectionId,
   isExpanded, 
   setIsExpanded 
 }) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  
+  // Internal state management - now self-contained
   const [currentStep, setCurrentStep] = useState<CommentStep>('collapsed');
   const [previousStep, setPreviousStep] = useState<CommentStep>('collapsed');
   const [newComment, setNewComment] = useState({ name: '', comment: '' });
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [likedComments, setLikedComments] = useState<Set<string>>(new Set());
   const [dislikedComments, setDislikedComments] = useState<Set<string>>(new Set());
+
+  // Fetch comments for this collection
+  const { data: commentsData } = useQuery({
+    queryKey: ['collection-comments', collectionId],
+    queryFn: () => collectionsApi.getComments(collectionId, { cursor: null, limit: '10' }),
+    enabled: !!collectionId,
+    retry: 3,
+    staleTime: 2 * 60 * 1000,
+  });
+
+  // Fetch AI Summary
+  const { data: aiSummary, isLoading: summaryLoading } = useQuery({
+    queryKey: ['collection-ai-summary', collectionId],
+    queryFn: () => collectionsApi.getAISummary(collectionId),
+    enabled: !!collectionId,
+    retry: 3,
+    staleTime: 10 * 60 * 1000,
+  });
+
+  // React Query mutations
+  const addCommentMutation = useMutation({
+    mutationFn: async (commentData: { name: string; comment: string }) => {
+      if (!collectionId) throw new Error('No collection ID');
+      return collectionsApi.addComment(collectionId, {
+        username: commentData.name || null,
+        user_pic_url: null,
+        comment_text: commentData.comment
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Komentar terkirim!",
+        description: "Terima kasih atas kontribusi Anda",
+        duration: 2000,
+      });
+      // Invalidate comments to refresh the list
+      queryClient.invalidateQueries({ queryKey: ['collection-comments', collectionId] });
+    },
+    onError: (error) => {
+      console.error('Error submitting comment:', error);
+      toast({
+        title: "Gagal mengirim komentar",
+        description: "Silakan coba lagi",
+        variant: "destructive",
+        duration: 2000,
+      });
+    }
+  });
+
+  const likeCommentMutation = useMutation({
+    mutationFn: async (commentId: string) => {
+      return commentsApi.like(commentId);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Komentar disukai!",
+        description: "Terima kasih atas apresiasi Anda",
+        duration: 2000,
+      });
+      // Invalidate comments to refresh like counts immediately
+      queryClient.invalidateQueries({ queryKey: ['collection-comments', collectionId] });
+    },
+    onError: (error) => {
+      console.error('Error liking comment:', error);
+      toast({
+        title: "Gagal menyukai komentar",
+        description: "Silakan coba lagi",
+        variant: "destructive",
+        duration: 2000,
+      });
+    }
+  });
+
+  const handleCommentSubmit = async (commentData: { name: string; comment: string }) => {
+    addCommentMutation.mutate(commentData);
+  };
+
+  const handleLikeComment = (commentId: string) => {
+    likeCommentMutation.mutate(commentId);
+  };
+  
+  const comments = (commentsData?.data || []) as unknown as Comment[];
+  const aiSummaryText = aiSummary?.text || '';
 
   // Navigation direction tracking
   const getDirection = (from: CommentStep, to: CommentStep): 'forward' | 'back' => {
@@ -57,12 +140,9 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
     setCurrentStep(step);
   };
 
-  const aiSummaryText = aiSummary?.text;
-
   const handleSubmitComment = () => {
     if (newComment.comment.trim()) {
-      // Pass the comment data to the parent component
-      onAddComment(newComment);
+      handleCommentSubmit(newComment);
       setNewComment({ name: '', comment: '' });
       navigateToStep('list');
     }
@@ -74,8 +154,8 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
     setIsExpanded(false);
   };
 
-  const handleLikeComment = (commentId: string) => {
-    onLikeComment(commentId);
+  const handleLikeCommentClick = (commentId: string) => {
+    handleLikeComment(commentId);
     setLikedComments(prev => new Set(prev).add(commentId));
     setDislikedComments(prev => {
       const newSet = new Set(prev);
@@ -150,7 +230,7 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
               aiSummaryText={aiSummaryText}
               summaryLoading={summaryLoading}
               comments={comments}
-              onLikeComment={handleLikeComment}
+              onLikeComment={handleLikeCommentClick}
               onDislikeComment={handleDislikeComment}
               likedComments={likedComments}
               dislikedComments={dislikedComments}
@@ -180,7 +260,7 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
               aiSummaryText={aiSummaryText}
               summaryLoading={summaryLoading}
               comments={comments}
-              onLikeComment={handleLikeComment}
+              onLikeComment={handleLikeCommentClick}
               onDislikeComment={handleDislikeComment}
               likedComments={likedComments}
               dislikedComments={dislikedComments}
@@ -465,7 +545,7 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
               value={newComment.comment}
               onChange={(e) => setNewComment(prev => ({ ...prev, comment: e.target.value }))}
               placeholder=""
-              className="w-full p-3 bg-gray-100 border-none rounded-2xl h-32 resize-none"
+              className="w-full p-3 font-sf font-regular bg-gray-100 border-none rounded-2xl h-32 resize-none"
             />
           </motion.div>
 
@@ -586,38 +666,45 @@ const CommentsList: React.FC<{
             <p className="text-gray-700 text-base mb-3 font-sf font-light">
               {comment.comment_text}
             </p>
-            <div className="flex items-center gap-4">
-              <motion.button
-                onClick={() => onLikeComment(comment.id)}
-                className={`flex items-center gap-2 transition-colors ${
-                  likedComments.has(comment.id) 
-                    ? 'text-blue-600' 
-                    : 'text-gray-500 hover:text-blue-600'
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <ThumbsUp 
-                  className="w-4 h-4" 
-                  fill={likedComments.has(comment.id) ? 'currentColor' : 'none'}
-                />
-                <span className="text-sm">{comment.likes_count || 0}</span>
-              </motion.button>
-              <motion.button 
-                onClick={() => onDislikeComment(comment.id)}
-                className={`flex items-center gap-2 transition-colors ${
-                  dislikedComments.has(comment.id) 
-                    ? 'text-red-600' 
-                    : 'text-gray-500 hover:text-red-600'
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <ThumbsDown 
-                  className="w-4 h-4" 
-                  fill={dislikedComments.has(comment.id) ? 'currentColor' : 'none'}
-                />
-              </motion.button>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <motion.button
+                  onClick={() => onLikeComment(comment.id)}
+                  className={`flex items-center gap-2 transition-colors ${
+                    likedComments.has(comment.id) 
+                      ? 'text-blue-600' 
+                      : 'text-gray-500 hover:text-blue-600'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ThumbsUp 
+                    className="w-4 h-4" 
+                    fill={likedComments.has(comment.id) ? 'currentColor' : 'none'}
+                  />
+                  <span className="text-sm">{comment.likes_count || 0}</span>
+                </motion.button>
+                <motion.button 
+                  onClick={() => onDislikeComment(comment.id)}
+                  className={`flex items-center gap-2 transition-colors ${
+                    dislikedComments.has(comment.id) 
+                      ? 'text-red-600' 
+                      : 'text-gray-500 hover:text-red-600'
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <ThumbsDown 
+                    className="w-4 h-4" 
+                    fill={dislikedComments.has(comment.id) ? 'currentColor' : 'none'}
+                  />
+                </motion.button>
+              </div>
+              
+              {/* Date/Time */}
+              <span className="text-xs text-gray-400 font-sf">
+                {formatDateTime(comment.created_at)}
+              </span>
             </div>
           </motion.div>
         )) : (

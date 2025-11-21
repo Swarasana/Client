@@ -56,24 +56,24 @@ const narrationVersions = [
 ];
 
 interface AudioContentProps {
-  selectedNarrator: string;
-  setSelectedNarrator: (narrator: string) => void;
-  isPlaying: boolean;
-  onPlayPause: () => void;
   isExpanded: boolean;
   setIsExpanded: (expanded: boolean) => void;
 }
 
 const AudioContent: React.FC<AudioContentProps> = ({ 
-  selectedNarrator, 
-  setSelectedNarrator, 
-  isPlaying, 
-  onPlayPause, 
   isExpanded, 
   setIsExpanded 
 }) => {
+  // Internal state management - now self-contained
+  const [selectedNarrator, setSelectedNarrator] = React.useState<string>('Anton');
+  const [isPlaying, setIsPlaying] = React.useState<boolean>(false);
   const [selectedVersion, setSelectedVersion] = React.useState<string>('');
   const [progress, setProgress] = React.useState<number>(0);
+  
+  // Audio playback handler
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
+  };
   
   // Audio simulation - 30 seconds total
   const AUDIO_DURATION = 30000; // 30 seconds in ms
@@ -90,8 +90,8 @@ const AudioContent: React.FC<AudioContentProps> = ({
         setProgress(prev => {
           const newProgress = prev + (100 / (AUDIO_DURATION / 100)); // Update every 100ms
           if (newProgress >= 100) {
-            // Schedule the onPlayPause call for the next tick to avoid setState during render
-            setTimeout(() => onPlayPause(), 0);
+            // Schedule the handlePlayPause call for the next tick to avoid setState during render
+            setTimeout(() => handlePlayPause(), 0);
             return 100;
           }
           return newProgress;
@@ -102,7 +102,7 @@ const AudioContent: React.FC<AudioContentProps> = ({
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isPlaying, isFormComplete, onPlayPause]);
+  }, [isPlaying, isFormComplete, handlePlayPause]);
   
   // Reset progress when stopping
   React.useEffect(() => {
@@ -141,7 +141,7 @@ const AudioContent: React.FC<AudioContentProps> = ({
                 onClick={(e) => {
                   e.stopPropagation();
                   if (isFormComplete) {
-                    onPlayPause();
+                    handlePlayPause();
                   }
                 }}
                 disabled={!isFormComplete}
@@ -260,7 +260,7 @@ const AudioContent: React.FC<AudioContentProps> = ({
             {/* Play Button */}
             <div className="flex justify-center">
               <Button
-                onClick={onPlayPause}
+                onClick={handlePlayPause}
                 disabled={!isFormComplete}
                 className={`rounded-full w-16 h-16 p-0 shadow-lg transition-all ${
                   isFormComplete 
