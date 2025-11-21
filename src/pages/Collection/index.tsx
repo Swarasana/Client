@@ -9,7 +9,8 @@ import {
   MessageSquare,
   User,
   ChevronUp,
-  Book
+  Book,
+  Heart
 } from "lucide-react";
 import { collectionsApi, commentsApi } from "@/api";
 import { Button } from "@/components/ui/button";
@@ -40,7 +41,11 @@ const ClickableImage: React.FC<{
   name: string;
   className?: string;
   imageClassName?: string;
-}> = ({ src, alt, name, className, imageClassName }) => {
+  onLike?: () => void;
+  isLiked?: boolean;
+  likesCount?: number;
+  isLiking?: boolean;
+}> = ({ src, alt, name, className, imageClassName, onLike, isLiked, likesCount, isLiking }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -66,6 +71,31 @@ const ClickableImage: React.FC<{
           imageClassName={imageClassName}
           className={className}
         />
+        {/* Like button overlay */}
+        {onLike && (
+          <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-2">
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onLike) onLike();
+              }}
+              size="sm"
+              variant="ghost"
+              className={`p-0 h-auto w-auto hover:bg-transparent transition-all hover:scale-110 active:scale-125 ${
+                isLiked ? 'animate-bounce' : ''
+              }`}
+            >
+              <Heart 
+                className={`w-5 h-5 transition-all duration-300 ${
+                  isLiked 
+                    ? 'fill-pink-500 text-pink-500 scale-110 drop-shadow-lg' 
+                    : 'text-white hover:text-pink-200'
+                } ${isLiking ? 'animate-pulse' : ''}`} 
+              />
+            </Button>
+            <span className="text-white text-sm font-medium">{likesCount || 0}</span>
+          </div>
+        )}
       </motion.div>
     );
   }
@@ -99,6 +129,32 @@ const ClickableImage: React.FC<{
               onLoad={() => setImageLoaded(true)}
             />
           </div>
+          
+          {/* Like button overlay */}
+          {onLike && (
+            <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-2">
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (onLike) onLike();
+                }}
+                size="sm"
+                variant="ghost"
+                className={`p-0 h-auto w-auto hover:bg-transparent transition-all hover:scale-110 active:scale-125 ${
+                  isLiked ? 'animate-bounce' : ''
+                }`}
+              >
+                <Heart 
+                  className={`w-5 h-5 transition-all duration-300 ${
+                    isLiked 
+                      ? 'fill-pink-500 text-pink-500 scale-110 drop-shadow-lg' 
+                      : 'text-white hover:text-pink-200'
+                  } ${isLiking ? 'animate-pulse' : ''}`} 
+                />
+              </Button>
+              <span className="text-white text-sm font-medium">{likesCount || 0}</span>
+            </div>
+          )}
         </motion.div>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] p-0 border-none bg-transparent">
@@ -129,6 +185,10 @@ const CollectionDetail: React.FC = () => {
   // State management
   const [currentSlide, setCurrentSlide] = useState<number>(0);
   const [contributionState, setContributionState] = useState<ContributionState>('none');
+  
+  // Like state
+  const [isLiked, setIsLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
   
   // Expand states for each card
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -166,11 +226,56 @@ const CollectionDetail: React.FC = () => {
   const { data: aiSummary, isLoading: summaryLoading } = useQuery({
     queryKey: ['collection-ai-summary', id],
     queryFn: () => collectionsApi.getAISummary(id!),
-    enabled: !!id && currentSlide === 2, // Comments is index 2
+    enabled: !!id && currentSlide === 1, // Comments is index 2
     retry: 3,
     staleTime: 10 * 60 * 1000,
   });
 
+  // Initialize likes count from collection data
+  React.useEffect(() => {
+    if (collection) {
+      setLikesCount(collection.likes_count || 0);
+    }
+  }, [collection]);
+
+  // Like collection mutation
+  const likeMutation = useMutation({
+    mutationFn: () => collectionsApi.like(id!),
+    onSuccess: (updatedCollection) => {
+      // Update the collection data with the response from server
+      queryClient.setQueryData(['collection', id], updatedCollection);
+      setLikesCount(updatedCollection.likes_count);
+      
+      toast({
+        title: "Koleksi disukai!",
+        description: "Terima kasih atas apresiasi Anda",
+        duration: 2000,
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Gagal menyukai koleksi",
+        description: "Silakan coba lagi",
+        variant: "destructive",
+        duration: 2000,
+      });
+    },
+  });
+
+  // Handle like collection (infinite likes allowed)
+  const handleLikeCollection = () => {
+    // Always set to liked state when clicked
+    setIsLiked(true);
+    setLikesCount(prev => prev + 1);
+    likeMutation.mutate();
+    
+    // Reset to non-liked state after animation for better UX
+    setTimeout(() => {
+      if (!likeMutation.isPending) {
+        setIsLiked(false);
+      }
+    }, 1000);
+  };
 
   if (collectionError) {
     let errorType: "network" | "server" | "generic" = "generic";
@@ -210,6 +315,7 @@ const CollectionDetail: React.FC = () => {
       toast({
         title: "Komentar terkirim!",
         description: "Terima kasih atas kontribusi Anda",
+        duration: 2000,
       });
       // Invalidate comments to refresh the list
       queryClient.invalidateQueries({ queryKey: ['collection-comments', id] });
@@ -221,7 +327,8 @@ const CollectionDetail: React.FC = () => {
       toast({
         title: "Gagal mengirim komentar",
         description: "Silakan coba lagi",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 2000,
       });
     }
   });
@@ -234,6 +341,7 @@ const CollectionDetail: React.FC = () => {
       toast({
         title: "Komentar disukai!",
         description: "Terima kasih atas apresiasi Anda",
+        duration: 2000,
       });
       // Invalidate comments to refresh like counts immediately
       queryClient.invalidateQueries({ queryKey: ['collection-comments', id] });
@@ -243,7 +351,8 @@ const CollectionDetail: React.FC = () => {
       toast({
         title: "Gagal menyukai komentar",
         description: "Silakan coba lagi",
-        variant: "destructive"
+        variant: "destructive",
+        duration: 2000,
       });
     }
   });
@@ -304,6 +413,7 @@ const CollectionDetail: React.FC = () => {
         toast({
           title: "Berhasil dibagikan!",
           description: "Koleksi telah dibagikan",
+          duration: 2000,
         });
       } else {
         // Fallback: Copy to clipboard
@@ -311,6 +421,7 @@ const CollectionDetail: React.FC = () => {
         toast({
           title: "Link disalin!",
           description: "Link koleksi berhasil disalin ke clipboard",
+          duration: 2000,
         });
       }
     } catch (error) {
@@ -321,6 +432,7 @@ const CollectionDetail: React.FC = () => {
         toast({
           title: "Link disalin!",
           description: "Link koleksi berhasil disalin ke clipboard",
+          duration: 2000,
         });
       } catch (clipboardError) {
         console.error('Clipboard error:', clipboardError);
@@ -328,6 +440,7 @@ const CollectionDetail: React.FC = () => {
           title: "Gagal membagikan",
           description: "Silakan salin link secara manual",
           variant: "destructive",
+          duration: 2000,
         });
       }
     }
@@ -366,6 +479,10 @@ const CollectionDetail: React.FC = () => {
             name={collection.name}
             className="w-full h-full rounded-3xl overflow-hidden shadow-2xl"
             imageClassName="w-full h-full object-cover rounded-3xl"
+            onLike={handleLikeCollection}
+            isLiked={isLiked}
+            likesCount={likesCount}
+            isLiking={likeMutation.isPending}
           />
         ) : null}
       </div>

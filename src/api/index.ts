@@ -21,6 +21,10 @@ export class CollectionsService extends APIService {
         return this.post<Comment>(`/${id}/comments`, data) 
     }
 
+    like(id: string): Promise<Collection> {
+        return this.put<Collection>(`/${id}/like`)
+    }
+
     getAISummary(id: string): Promise<{ text: string }> {
         return this.get<{ text: string }>(`/${id}/ai-summary`)
     }
