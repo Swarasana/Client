@@ -6,5 +6,6 @@ import ExhibitionCard from "./ExhibitionCard";
 import ArtsyImagePlaceholder from "./ArtsyImagePlaceholder";
 import ClickableImage from "./ClickableImage";
 import GlobalErrorBoundary from "./GlobalErrorBoundary";
+import VisitorCounter from "./VisitorCounter";
 
-export { Navbar, Footer, SplashScreen, ErrorState, ExhibitionCard, ArtsyImagePlaceholder, ClickableImage, GlobalErrorBoundary };
+export { Navbar, Footer, SplashScreen, ErrorState, ExhibitionCard, ArtsyImagePlaceholder, ClickableImage, GlobalErrorBoundary, VisitorCounter };

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Heart } from "lucide-react";
+import { Heart, Eye } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import {
 import { ArtsyImagePlaceholder } from "@/components";
 import { useState } from "react";
 import { Button } from "../ui/button";
+import { Skeleton } from "../ui/skeleton";
 
 const ClickableImage: React.FC<{
   src?: string;
@@ -21,7 +22,13 @@ const ClickableImage: React.FC<{
   isLiked?: boolean;
   likesCount?: number;
   isLiking?: boolean;
-}> = ({ src, alt, name, className, imageClassName, onLike, isLiked, likesCount, isLiking }) => {
+  visitorCount?: number;
+  formattedVisitorCount?: string;
+  isLoadingVisitors?: boolean;
+}> = ({ 
+  src, alt, name, className, imageClassName, onLike, isLiked, likesCount, isLiking,
+  visitorCount, formattedVisitorCount, isLoadingVisitors 
+}) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -69,7 +76,26 @@ const ClickableImage: React.FC<{
                 } ${isLiking ? 'animate-pulse' : ''}`} 
               />
             </Button>
-            <span className="text-white text-sm font-medium">{likesCount || 0}</span>
+            <span className="text-white text-sm font-medium leading-none">{likesCount || 0}</span>
+          </div>
+        )}
+
+        {/* Visitor counter overlay */}
+        {(visitorCount !== undefined || isLoadingVisitors) && (
+          <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-2">
+            {isLoadingVisitors ? (
+              <>
+                <Skeleton className="w-4 h-4" />
+                <Skeleton className="h-4 w-12" />
+              </>
+            ) : (
+              <>
+                <Eye className="w-4 h-4 text-white/80" />
+                <span className="text-white/80 text-sm font-medium leading-none">
+                  {formattedVisitorCount} {visitorCount === 1 ? 'visitor' : 'visitors'}
+                </span>
+              </>
+            )}
           </div>
         )}
       </motion.div>
@@ -128,7 +154,26 @@ const ClickableImage: React.FC<{
                   } ${isLiking ? 'animate-pulse' : ''}`} 
                 />
               </Button>
-              <span className="text-white text-sm font-medium">{likesCount || 0}</span>
+              <span className="text-white text-sm font-medium leading-none">{likesCount || 0}</span>
+            </div>
+          )}
+
+          {/* Visitor counter overlay */}
+          {(visitorCount !== undefined || isLoadingVisitors) && (
+            <div className="absolute bottom-4 right-4 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-2">
+              {isLoadingVisitors ? (
+                <>
+                  <Skeleton className="w-4 h-4" />
+                  <Skeleton className="h-4 w-12" />
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4 text-white/80" />
+                  <span className="text-white/80 text-sm font-medium leading-none">
+                    {formattedVisitorCount} {visitorCount === 1 ? 'visitor' : 'visitors'}
+                  </span>
+                </>
+              )}
             </div>
           )}
         </motion.div>

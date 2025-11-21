@@ -1,5 +1,5 @@
 import { AxiosInstance } from 'axios'
-import { Collection, CursorPagination, Exhibition, PaginatedResponse } from '@/types'
+import { Collection, CursorPagination, Exhibition, PaginatedResponse, VisitorCount, TrackVisit, TrendingCollection, VisitorAnalytics } from '@/types'
 import { api, APIService } from './base'
 
 
@@ -64,9 +64,33 @@ export class ExhibitionsService extends APIService {
     }
 }
 
+// 4. Visitors API
+export class VisitorsService extends APIService {
+    constructor(apiInstance: AxiosInstance) {
+        super(apiInstance, 'visitors')
+    }
+
+    getVisitorCount(collectionId: string): Promise<VisitorCount> {
+        return this.get<VisitorCount>(`/collections/${collectionId}/visitor-count`)
+    }
+
+    trackVisit(collectionId: string, sessionId?: string): Promise<TrackVisit> {
+        return this.post<TrackVisit>(`/collections/${collectionId}/visit`, sessionId ? { session_id: sessionId } : {})
+    }
+
+    getTrending(limit: number = 10): Promise<{ trending: TrendingCollection[] }> {
+        return this.get<{ trending: TrendingCollection[] }>(`/trending?limit=${limit}`)
+    }
+
+    getAnalytics(collectionId: string): Promise<VisitorAnalytics> {
+        return this.get<VisitorAnalytics>(`/collections/${collectionId}/analytics`)
+    }
+}
+
 
 
 // Initialize and Export API Objects
 export const collectionsApi = new CollectionsService(api)
 export const commentsApi = new CommentsService(api)
 export const exhibitionsApi = new ExhibitionsService(api)
+export const visitorsApi = new VisitorsService(api)

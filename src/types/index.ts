@@ -45,6 +45,28 @@ export interface Collection {
   updated_at: string;
 }
 
+// Visitor Counter Types
+export interface VisitorCount {
+  visitorCount: number;
+}
+
+export interface TrackVisit {
+  isNewVisit: boolean;
+  totalVisitorCount: number;
+}
+
+export interface TrendingCollection {
+  collection_id: string;
+  recent_visits: number;
+}
+
+export interface VisitorAnalytics {
+  totalVisits: number;
+  uniqueVisitors: number;
+  visitsLast7Days: number;
+  visitsToday: number;
+}
+
 export interface Comment {
   id: string;
   collection_id: string;

@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ClickableImage } from "@/components";
 import { useToast } from "@/hooks/use-toast";
+import { useVisitorTracking } from "@/hooks/useVisitorTracking";
 import DescriptionContent from "./DescriptionContent";
 import AudioContent from "./AudioContent";
 import CommentsContent from "./CommentsContent";
@@ -32,6 +33,9 @@ const CollectionDetail: React.FC = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   
+  // Visitor tracking
+  const visitorTracking = useVisitorTracking(id!);
+
   // Expand states for each card
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isAudioExpanded, setIsAudioExpanded] = useState(false);
@@ -212,6 +216,9 @@ const CollectionDetail: React.FC = () => {
             isLiked={isLiked}
             likesCount={likesCount}
             isLiking={likeMutation.isPending}
+            visitorCount={visitorTracking.visitorCount}
+            formattedVisitorCount={visitorTracking.formattedVisitorCount}
+            isLoadingVisitors={visitorTracking.isLoading}
           />
         ) : null}
       </div>
