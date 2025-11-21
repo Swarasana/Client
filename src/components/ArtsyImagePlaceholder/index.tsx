@@ -12,12 +12,24 @@ const ArtsyPlaceholder: React.FC<{ name: string; className?: string }> = ({ name
     'from-indigo-400 to-purple-500'
   ];
   
-  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+  // Generate consistent color based on name hash (deterministic, not random)
+  const hashCode = (str: string) => {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
+  };
+  
+  const colorIndex = hashCode(name) % colors.length;
+  const selectedColor = colors[colorIndex];
   const initial = name.charAt(0).toUpperCase();
 
   return (
     <div className={`relative overflow-hidden ${className}`}>
-      <div className={`w-full h-64 bg-gradient-to-br ${randomColor} flex items-center justify-center`}>
+      <div className={`w-full h-64 bg-gradient-to-br ${selectedColor} flex items-center justify-center`}>
         {/* Artistic background pattern */}
         <div className="absolute inset-0 opacity-20">
           <div className="absolute top-4 left-4 w-8 h-8 border-2 border-white/40 rounded-full" />
