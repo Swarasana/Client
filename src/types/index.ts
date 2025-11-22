@@ -89,6 +89,7 @@ export interface Collection {
     likes_count: number;
     created_at: string;
     updated_at: string;
+    qr_code_url: string;
 }
 
 export interface AddExhibitionResponse {

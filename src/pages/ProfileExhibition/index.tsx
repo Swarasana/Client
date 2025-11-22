@@ -201,6 +201,7 @@ const ProfileExhibitionDetail: React.FC = () => {
                             Koleksi Favorit
                         </motion.h2>
                         <ProfileCollection
+                            key={-1}
                             collection={collections[0]}
                             index={0}
                             handleCollectionClick={handleCollectionClick}
@@ -239,6 +240,7 @@ const ProfileExhibitionDetail: React.FC = () => {
                         {collections.map(
                             (collection: Collection, index: number) => (
                                 <ProfileCollection
+                                    key={index}
                                     collection={collection}
                                     index={index}
                                     handleCollectionClick={
@@ -278,6 +280,18 @@ const ProfileCollection: React.FC<{
     index: number;
     handleCollectionClick: (id: string) => void;
 }> = ({ collection, index, handleCollectionClick }) => {
+    const downloadQR = async (url: string, filename = "qr-code.png") => {
+        const response = await fetch(url);
+        const blob = await response.blob();
+
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+    };
+
     return (
         <motion.div
             key={collection.id}
@@ -309,7 +323,20 @@ const ProfileCollection: React.FC<{
                             <p className="flex-grow pt-1 font-bold text-xl text-wrap leading-tight">
                                 {collection.name}
                             </p>
-                            <QrCode className="w-6 h-6 flex-shrink-0" />
+                            <Button
+                                className="p-0 w-8 h-8 rounded-full bg-transparent text-black shadow-none"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    downloadQR(
+                                        collection.qr_code_url,
+                                        `qr-${
+                                            collection.name || "collection"
+                                        }.png`
+                                    );
+                                }}
+                            >
+                                <QrCode className="text-[24px] w-full h-full flex-shrink-0" />
+                            </Button>
                         </div>
                         <p className="flex-grow font-normal text-base">
                             {collection.artist_name}

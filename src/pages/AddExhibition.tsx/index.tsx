@@ -43,6 +43,7 @@ const AddExhibition: React.FC = () => {
             error: string;
             submittedOnce: boolean;
             submitted: boolean;
+            qr_code_url: string;
         }[]
     >([]);
 
@@ -132,6 +133,7 @@ const AddExhibition: React.FC = () => {
                 error: "",
                 submittedOnce: false,
                 submitted: false,
+                qr_code_url: "",
             },
         ]);
     };
@@ -190,6 +192,7 @@ const AddExhibition: React.FC = () => {
                 copy[index].uploading = false;
                 copy[index].submittedOnce = true;
                 copy[index].submitted = true;
+                copy[index].qr_code_url = createdCollection.qr_code_url;
                 return copy;
             });
         } catch (err: any) {
@@ -200,6 +203,18 @@ const AddExhibition: React.FC = () => {
                 return copy;
             });
         }
+    };
+
+    const downloadQR = async (url: string, filename = "qr-code.png") => {
+        const response = await fetch(url);
+        const blob = await response.blob();
+
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
     };
 
     return (
@@ -554,7 +569,16 @@ const AddExhibition: React.FC = () => {
                                         <div className="flex flex-row w-full">
                                             <div className="flex flex-row flex-grow"></div>
                                             <Button
-                                                // onClick={}
+                                                onClick={() =>
+                                                    downloadQR(
+                                                        col.qr_code_url,
+                                                        `qr-${
+                                                            collections[index]
+                                                                .name ||
+                                                            "collection"
+                                                        }.png`
+                                                    )
+                                                }
                                                 className="flex gap-1 items-center justify-center bg-yellow-400 hover:bg-yellow-500 font-sf font-semibold text-gray-900 text-sm rounded-full py-3 px-4"
                                             >
                                                 <QrCode className="w-6 h-6" />
