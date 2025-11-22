@@ -14,6 +14,7 @@ import { exhibitionsApi, levelsApi, merchApi, userApi } from "@/api";
 import { Exhibition, Level, Merch, Profile as ProfileType } from "@/types";
 import MerchCard from "@/components/MerchCard";
 import { ExhibitionCard } from "@/components";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Profile: React.FC = () => {
     const [profile, setProfile] = useState<ProfileType | null>(null);
@@ -28,6 +29,7 @@ const Profile: React.FC = () => {
         top: 0,
         right: 0,
     });
+    const [levelsAvatarLoaded, setLevelsAvatarLoaded] = useState(false);
 
     const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
     const [exhibitionsCursor, setExhibitionsCursor] = useState<string | null>(
@@ -131,7 +133,12 @@ const Profile: React.FC = () => {
                     : "from-blue1 via-blue1 to-blue2"
             } text-white overflow-y-auto`}
         >
-            <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0] z-0">
+            <motion.div
+                className="absolute top-0 left-0 w-full overflow-hidden leading-[0] z-0"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.2, delay: 0.7 }}
+            >
                 <img
                     src={
                         profile.role == "visitor"
@@ -141,7 +148,7 @@ const Profile: React.FC = () => {
                     alt="Motif latar belakang"
                     className="w-full"
                 />
-            </div>
+            </motion.div>
 
             <AnimatePresence>
                 {showLevelsOverlay && (
@@ -167,10 +174,16 @@ const Profile: React.FC = () => {
                                     key={level.id}
                                     className="flex flex-row w-full gap-2 items-center"
                                 >
+                                    {!levelsAvatarLoaded && (
+                                        <Skeleton className="w-14 h-14" />
+                                    )}
                                     <img
-                                        src={curator}
+                                        src={level.avatar_url}
                                         alt=""
                                         className="w-14 h-14"
+                                        onLoad={() =>
+                                            setLevelsAvatarLoaded(true)
+                                        }
                                     />
                                     <div className="flex flex-col gap-0">
                                         <div className="flex flex-row">
@@ -202,7 +215,12 @@ const Profile: React.FC = () => {
                 )}
             </AnimatePresence>
 
-            <div className="flex flex-col top-0 w-full max-w-screen py-12 gap-0 items-start z-10 font-sf">
+            <motion.div
+                className="flex flex-col top-0 w-full max-w-screen py-12 gap-0 items-start z-10 font-sf"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.8 }}
+            >
                 <div className="flex flex-row gap-4 px-4  w-full mb-12 text-white">
                     <div className="w-24 h-24 rounded-full bg-[#78C49E] flex-shrink-0">
                         <img
@@ -251,12 +269,30 @@ const Profile: React.FC = () => {
                 </div>
 
                 {profile.role == "visitor" && (
-                    <div className="flex flex-col gap-12 mt-8 w-full">
+                    <div className="flex flex-col gap-8 mt-8 w-full">
                         <div className="flex flex-col gap-2 px-4">
                             <p className="font-bold text-lg">
                                 Koleksi yang Pernah Kamu Lihat
                             </p>
                             {/* <CollectionCard collection={} /> */}
+                            <motion.div
+                                className="text-center py-6 bg-white/20 border border-white rounded-3xl"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.5, delay: 0.8 }}
+                            >
+                                <div className="text-gray-400 mb-2">
+                                    <div className="w-12 h-12 mx-auto mb-2 bg-gray-50/50 rounded-full flex items-center justify-center">
+                                        <span className="text-2xl">🏛️</span>
+                                    </div>
+                                    <h3 className="mb-1 text-base font-sf font-semibold text-white">
+                                        Tidak Ada Koleksi
+                                    </h3>
+                                    <p className="text-white/70 text-xs">
+                                        Kamu belum pernah melihat koleksi
+                                    </p>
+                                </div>
+                            </motion.div>
                         </div>
 
                         <div className="flex flex-col gap-4">
@@ -282,9 +318,25 @@ const Profile: React.FC = () => {
                                     ))}
                                 </div>
                             ) : (
-                                <p>
-                                    Kamu belum meninggalkan komentar apa pun...
-                                </p>
+                                <motion.div
+                                    className="text-center py-6 bg-white/20 border border-white rounded-3xl mx-4"
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.5, delay: 0.8 }}
+                                >
+                                    <div className="text-gray-400 mb-2">
+                                        <div className="w-12 h-12 mx-auto mb-2 bg-gray-50/50 rounded-full flex items-center justify-center">
+                                            <span className="text-2xl">💬</span>
+                                        </div>
+                                        <h3 className="mb-1 text-base font-sf font-semibold text-white">
+                                            Tidak Ada Komentar
+                                        </h3>
+                                        <p className="text-white/70 text-xs">
+                                            Kamu belum pernah meninggalkan
+                                            komentar
+                                        </p>
+                                    </div>
+                                </motion.div>
                             )}
                         </div>
 
@@ -302,28 +354,57 @@ const Profile: React.FC = () => {
                 )}
 
                 {profile.role == "curator" && (
-                    <div className="flex flex-col gap-8 w-full mt-8 mb-16">
+                    <div className="flex flex-col gap-8 w-full mt-8 mb-16 px-4">
                         <div className="flex flex-col gap-2 w-full">
                             <p className="font-bold text-lg">Pameranmu</p>
                             <div className="flex flex-col gap-4">
-                                {exhibitions.map((exhibition) => (
-                                    <ExhibitionCard
-                                        key={exhibition.id}
-                                        exhibition={exhibition}
-                                        orientation="horizontal"
-                                    />
-                                ))}
-                                {hasMoreExhibitions && (
-                                    <Button
-                                        onClick={loadMoreExhibitions}
-                                        disabled={loadingExhibitions}
-                                        className="w-full text-white rounded-full disabled:bg-transparent hover:bg-transparent hover:text-yellow-300"
-                                        variant="ghost"
+                                {exhibitions.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {exhibitions.map((exhibition) => (
+                                            <ExhibitionCard
+                                                key={exhibition.id}
+                                                exhibition={exhibition}
+                                                orientation="horizontal"
+                                            />
+                                        ))}
+                                        {hasMoreExhibitions && (
+                                            <Button
+                                                onClick={loadMoreExhibitions}
+                                                disabled={loadingExhibitions}
+                                                className="w-full text-white rounded-full disabled:bg-transparent hover:bg-transparent hover:text-yellow-300"
+                                                variant="ghost"
+                                            >
+                                                {loadingExhibitions
+                                                    ? "Loading..."
+                                                    : "Muat lebih banyak"}
+                                            </Button>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <motion.div
+                                        className="text-center py-6 bg-white/20 border border-white rounded-3xl"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        transition={{
+                                            duration: 0.5,
+                                            delay: 0.8,
+                                        }}
                                     >
-                                        {loadingExhibitions
-                                            ? "Loading..."
-                                            : "Muat lebih banyak"}
-                                    </Button>
+                                        <div className="text-gray-400 mb-2">
+                                            <div className="w-12 h-12 mx-auto mb-2 bg-gray-50/50 rounded-full flex items-center justify-center">
+                                                <span className="text-2xl">
+                                                    🏛️
+                                                </span>
+                                            </div>
+                                            <h3 className="mb-1 text-base font-sf font-semibold text-white">
+                                                Tidak Ada Pameran
+                                            </h3>
+                                            <p className="text-white/70 text-xs">
+                                                Kamu belum pernah mendaftarkan
+                                                pameran
+                                            </p>
+                                        </div>
+                                    </motion.div>
                                 )}
                             </div>
                         </div>
@@ -337,7 +418,7 @@ const Profile: React.FC = () => {
                         </Button>
                     </div>
                 )}
-            </div>
+            </motion.div>
         </main>
     );
 };
