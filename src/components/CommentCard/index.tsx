@@ -1,103 +1,115 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowUpRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArtsyImagePlaceholder } from "@/components";
-
-interface Comment {
-    id: string;
-    comment_text: string;
-    likes_count: number;
-    collection_id: string;
-    collection_name: string;
-    location: string;
-}
+import trophy from "@/assets/images/trophy.svg";
+import { ThumbsDown, ThumbsUp } from "lucide-react";
+import { UserComment } from "@/types";
 
 interface CommentCardProps {
-    comment: Comment;
+    comment: UserComment;
     onClick?: () => void;
-    variant?: "mobile" | "desktop";
-    mobileSize?: "small" | "large"; // small: 160x209, large: 207x256
 }
 
-const CommentCard: React.FC<CommentCardProps> = ({
-    comment,
-    onClick,
-    variant = "desktop",
-    mobileSize = "small",
-}) => {
+const CommentCard: React.FC<CommentCardProps> = ({ comment, onClick }) => {
     const navigate = useNavigate();
-    const isMobile = variant === "mobile";
-
-    // Determine mobile dimensions
-    const mobileDimensions =
-        mobileSize === "large"
-            ? "w-[207px] h-[256px] min-w-[207px]"
-            : "w-[160px] h-[209px] min-w-[160px]";
 
     const handleClick = () => {
         if (onClick) {
             onClick();
         }
-        navigate(`/collections/${comment.collection_id}`);
+        navigate(`/collection/${comment.collection_id}`);
+    };
+
+    const handleLikeCommentClick = (commentId: string) => {
+        //
+    };
+
+    const handleDislikeCommentClick = (commentId: string) => {
+        //
     };
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={isMobile ? "flex-shrink-0" : ""}
+            className="flex-none w-[320px] snap-start"
             onClick={handleClick}
         >
             <Card
-                className={`bg-white/10 backdrop-blur-sm border-0 overflow-hidden hover:bg-white/20 transition-all duration-300 cursor-pointer ${
-                    isMobile ? "rounded-3xl" : ""
-                }`}
+                className="bg-white h-full rounded-3xl p-4 hover:bg-white/20 transition-all duration-300 font-sf text-black"
+                onClick={handleClick}
             >
-                <CardContent className={`p-0 ${isMobile ? "rounded-3xl" : ""}`}>
-                    <div
-                        className={`${
-                            isMobile ? mobileDimensions : "aspect-[4/3]"
-                        } relative group`}
-                    >
-                        {/* Image with Artsy Placeholder */}
-                        {/* <ArtsyImagePlaceholder
-                            src={collection.image_url}
-                            alt={collection.name}
-                            name={collection.name}
-                            variant="aspect-fill"
-                            imageClassName="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 z-0"
-                            className="absolute inset-0 z-0"
-                        /> */}
-
-                        {/* Gradient overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent z-10" />
-
-                        {/* Yellow ring for active card (mobile only) */}
-                        {/* {isMobile && isActive && (
-                            <div className="absolute inset-0 border-4 border-yellow-400 rounded-3xl z-20 pointer-events-none" />
-                        )} */}
-
-                        {/* Text Content */}
-                        <div
-                            className={`absolute ${
-                                isMobile
-                                    ? "bottom-5 left-5 right-5"
-                                    : "bottom-5 left-5 right-5"
-                            } z-30`}
-                        >
-                            <h3 className="text-yellow1 font-sf font-bold mb-1 text-xl line-clamp-2 leading-tight">
-                                {comment.collection_name}
-                            </h3>
-                            <div className="flex justify-between items-center">
-                                <p className="text-white/80 font-inter text-sm">
-                                    {comment.location}
-                                </p>
-                                <div className="text-white hover:bg-white/20 text-xs px-1 py-1 rounded cursor-pointer transition-colors">
-                                    <ArrowUpRight className="w-5 h-5" />
+                <CardContent className="p-0 flex flex-col h-full">
+                    <div className="flex flex-col gap-2 h-full">
+                        <div className="flex flex-col gap-0">
+                            <div className="flex flex-row">
+                                <h3 className="flex-grow font-semibold text-base leading-tight">
+                                    {comment.collection_name}
+                                </h3>
+                                <div className="flex flex-row items-center gap-1 rounded-full bg-yellow-300 px-2 py-1">
+                                    <img
+                                        src={trophy}
+                                        alt="Poin"
+                                        className="w-3 h-3"
+                                    />
+                                    <p className="font-bold text-xs">10</p>
                                 </div>
                             </div>
+
+                            <p className="font-semibold text-xs text-neutral-500">
+                                {comment.exhibition_name}
+                            </p>
+                        </div>
+
+                        <p className=" flex-grow h-full text-xs line-clamp-3">
+                            {comment.comment_text}
+                        </p>
+
+                        <div className="flex items-center gap-4">
+                            <motion.button
+                                onClick={() =>
+                                    handleLikeCommentClick(comment.id)
+                                }
+                                //   className={`flex items-center gap-2 transition-colors ${
+                                //     likedComments.has(comment.id)
+                                //       ? 'text-blue-600'
+                                //       : 'text-gray-500 hover:text-blue-600'
+                                //   }`}
+                                className="flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <ThumbsUp
+                                    className="w-4 h-4"
+                                    fill={
+                                        /*likedComments.has(comment.id) ? 'currentColor' : */ "none"
+                                    }
+                                />
+                                <span className="text-sm">
+                                    {comment.likes_count || 0}
+                                </span>
+                            </motion.button>
+                            <motion.button
+                                onClick={() =>
+                                    handleDislikeCommentClick(comment.id)
+                                }
+                                //   className={`flex items-center gap-2 transition-colors ${
+                                //     dislikedComments.has(comment.id)
+                                //       ? 'text-red-600'
+                                //       : 'text-gray-500 hover:text-red-600'
+                                //   }`}
+                                className="flex items-center gap-2 transition-colors text-gray-500 hover:text-red-600"
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                            >
+                                <ThumbsDown
+                                    className="w-4 h-4"
+                                    fill={
+                                        /*dislikedComments.has(comment.id) ? 'currentColor' : */ "none"
+                                    }
+                                />
+                            </motion.button>
                         </div>
                     </div>
                 </CardContent>

@@ -10,9 +10,10 @@ import CommentsContent from "../Collection/CommentsContent";
 import CollectionCard from "@/components/CollectionCard";
 import CommentCard from "@/components/CommentCard";
 import { commentsApi, userApi } from "@/api";
+import { Profile as ProfileType } from "@/types";
 
 const Profile: React.FC = () => {
-    const [profile, setProfile] = useState<any>(null);
+    const [profile, setProfile] = useState<ProfileType | null>(null);
     const [comments, setComments] = useState<any[]>([]);
     const navigate = useNavigate();
 
@@ -64,7 +65,7 @@ const Profile: React.FC = () => {
                     </Button>
                 </div>
 
-                <div className="flex flex-row gap-4 w-full mb-16 text-white">
+                <div className="flex flex-row gap-4 w-full mb-12 text-white">
                     <div className="w-24 h-24 rounded-full bg-[#78C49E] flex-shrink-0">
                         <img
                             src={profile.user_pic_url ?? visitor}
@@ -72,7 +73,7 @@ const Profile: React.FC = () => {
                             className="w-full"
                         />
                     </div>
-                    <div className="flex flex-col gap-0 grow max-w-full min-w-0">
+                    <div className="flex flex-col gap-0 grow max-w-full min-w-0 justify-center">
                         <p className="font-bold text-3xl max-w-full truncate overflow-hidden text-ellipsis whitespace-nowrap">
                             Halo, {profile.display_name}
                         </p>
@@ -81,30 +82,34 @@ const Profile: React.FC = () => {
                                 ? "Pengunjung"
                                 : "Kurator"}
                         </p>
-                        <div className="flex flex-row items-center justify-center gap-2.5 w-full bg-yellow-400 py-1 pl-5 pr-3 rounded-3xl text-black text-sm">
-                            <img src={trophy} alt="Ikon Poin" />
-                            <p className="font-bold">{profile.points}</p>
-                            <div className="w-1 h-1 bg-[#BD9700]"></div>
-                            <p className="font-medium flex-grow text-center">
-                                "Si Paling Museum"
-                            </p>
-                            <ChevronDown />
-                        </div>
+                        {profile.role == "visitor" && (
+                            <div className="flex flex-row items-center justify-center gap-2.5 w-full bg-yellow-400 py-1 pl-5 pr-3 rounded-3xl text-black text-sm">
+                                <img src={trophy} alt="Ikon Poin" />
+                                <p className="font-bold">{profile.points}</p>
+                                <div className="w-1 h-1 bg-[#BD9700]"></div>
+                                <p className="font-medium flex-grow text-center">
+                                    "Si Paling Museum"
+                                </p>
+                                <ChevronDown />
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 my-6">
                     <p className="font-bold text-lg">
                         Koleksi yang Pernah Kamu Lihat
                     </p>
                     {/* <CollectionCard collection={} /> */}
                 </div>
 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-4 my-6">
                     <p className="font-bold text-lg">Kontribusi Kamu</p>
-                    {comments.map((c) => (
-                        <CommentCard key={c.id} comment={c} variant="mobile" />
-                    ))}
+                    <div className="flex gap-4 overflow-x-auto flex-nowrap">
+                        {profile.comments.map((c) => (
+                            <CommentCard key={c.id} comment={c} />
+                        ))}
+                    </div>
                 </div>
 
                 <div className="flex flex-col gap-2">

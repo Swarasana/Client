@@ -33,6 +33,29 @@ export interface User {
     updated_at: string;
 }
 
+export interface Profile {
+    id: string;
+    username: string;
+    display_name: string;
+    user_pic_url: string | null;
+    role: "curator" | "visitor";
+    created_at: string;
+    updated_at: string;
+    password: string;
+    points: number;
+    level_id: string;
+    comments: UserComment[];
+}
+
+export interface UserComment {
+    id: string;
+    comment_text: string;
+    likes_count: number;
+    collection_id: string;
+    collection_name: string;
+    exhibition_name: string;
+}
+
 export interface Collection {
     id: string;
     name: string;
