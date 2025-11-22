@@ -10,7 +10,7 @@ import {
     VisitorAnalytics,
     User,
 } from "@/types";
-import { api, APIService } from "./base";
+import { api, apiAuth, APIService } from "./base";
 
 // 1. Collections API
 export class CollectionsService extends APIService {
@@ -64,6 +64,10 @@ export class CommentsService extends APIService {
 
     getText(id: string): Promise<{ text: string }> {
         return this.get<{ text: string }>(`/${id}/text`);
+    }
+
+    getCommentCollection(id: string): Promise<any> {
+        return this.get(`/comments/${id}/collection`);
     }
 }
 
@@ -149,6 +153,11 @@ export class UserService extends APIService {
         role: string;
     }) {
         const res = await api.post("users/register", data);
+        return res.data;
+    }
+
+    async getProfile() {
+        const res = await apiAuth.get("/users/me");
         return res.data;
     }
 }

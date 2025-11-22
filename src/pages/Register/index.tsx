@@ -69,7 +69,7 @@ const Register: React.FC = () => {
                 >
                     <Input
                         type="text"
-                        placeholder="Nama Lengkap"
+                        placeholder="Nama"
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
                         className="w-full py-6 pl-4 pr-2 border-none rounded-md bg-gray-100 font-sf text-lg"

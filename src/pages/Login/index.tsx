@@ -24,10 +24,8 @@ const Login: React.FC = () => {
             const response = await userApi.login({ username, password });
             const { token } = response;
 
-            // Save token (localStorage or cookies)
             localStorage.setItem("authToken", token);
-
-            // router.push("/explore");
+            console.log(token);
             navigate(`/`);
         } catch (err: any) {
             console.error(err);
