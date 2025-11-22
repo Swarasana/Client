@@ -98,6 +98,10 @@ export class ExhibitionsService extends APIService {
             pagination
         );
     }
+
+    addExhibition(payload: Partial<Exhibition>) {
+        return this.post("", payload);
+    }
 }
 
 // 4. Visitors API

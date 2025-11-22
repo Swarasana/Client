@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronLeft } from "lucide-react";
+import { ChevronDown, ChevronLeft, Plus } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import headerPattern from "@/assets/images/header-pattern-big.svg";
+import headerPatternVisitor from "@/assets/images/header-pattern-big.svg";
+import headerPatternCurator from "@/assets/images/header-pattern-big-yellow.svg";
 import visitor from "@/assets/images/visitor.png";
 import curator from "@/assets/images/anton.png";
 import trophy from "@/assets/images/trophy.svg";
@@ -75,6 +76,10 @@ const Profile: React.FC = () => {
         }
     };
 
+    const handleAddExhibitionClick = () => {
+        navigate("/exhibition/add");
+    };
+
     if (!profile) {
         return (
             <main className="flex items-center justify-center h-screen text-white">
@@ -84,10 +89,20 @@ const Profile: React.FC = () => {
     }
 
     return (
-        <main className="flex flex-col w-full h-screen bg-gradient-to-t from-blue1 via-blue1 to-blue2 text-white overflow-hidden">
+        <main
+            className={`flex flex-col w-full h-screen bg-gradient-to-t ${
+                profile.role == "curator"
+                    ? "from-[#1371AB] via-blue1 to-blue1"
+                    : "from-blue1 via-blue1 to-blue2"
+            } text-white overflow-hidden`}
+        >
             <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0] z-0">
                 <img
-                    src={headerPattern}
+                    src={
+                        profile.role == "visitor"
+                            ? headerPatternVisitor
+                            : headerPatternCurator
+                    }
                     alt="Motif latar belakang"
                     className="w-full"
                 />
@@ -158,7 +173,11 @@ const Profile: React.FC = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => navigate(-1)}
-                        className="text-white hover:bg-white/10 p-2 rounded-full"
+                        className={`hover:bg-white/10 p-2 rounded-full ${
+                            profile.role == "visitor"
+                                ? "text-white"
+                                : "text-black"
+                        }`}
                     >
                         <ChevronLeft className="w-6 h-6" />
                     </Button>
@@ -173,10 +192,22 @@ const Profile: React.FC = () => {
                         />
                     </div>
                     <div className="flex flex-col gap-0 grow max-w-full min-w-0 justify-center">
-                        <p className="font-bold text-3xl max-w-full truncate overflow-hidden text-ellipsis whitespace-nowrap">
+                        <p
+                            className={`font-bold text-3xl max-w-full truncate overflow-hidden text-ellipsis whitespace-nowrap ${
+                                profile.role == "visitor"
+                                    ? "text-white"
+                                    : "text-black"
+                            }`}
+                        >
                             Halo, {profile.display_name}
                         </p>
-                        <p className="text-base pb-1">
+                        <p
+                            className={`text-base pb-1 ${
+                                profile.role == "visitor"
+                                    ? "text-white"
+                                    : "text-black"
+                            }`}
+                        >
                             {profile.role == "visitor"
                                 ? "Pengunjung"
                                 : "Kurator"}
@@ -199,34 +230,51 @@ const Profile: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-2 my-6">
-                    <p className="font-bold text-lg">
-                        Koleksi yang Pernah Kamu Lihat
-                    </p>
-                    {/* <CollectionCard collection={} /> */}
-                </div>
-
                 {profile.role == "visitor" && (
-                    <div className="flex flex-col gap-4 my-6">
-                        <p className="font-bold text-lg">Kontribusi Kamu</p>
-                        <div className="flex gap-4 overflow-x-auto flex-nowrap">
-                            {profile.comments.map((c) => (
-                                <CommentCard key={c.id} comment={c} />
-                            ))}
+                    <div className="flex flex-col gap-12 mt-4">
+                        <div className="flex flex-col gap-2">
+                            <p className="font-bold text-lg">
+                                Koleksi yang Pernah Kamu Lihat
+                            </p>
+                            {/* <CollectionCard collection={} /> */}
+                        </div>
+
+                        <div className="flex flex-col gap-4">
+                            <p className="font-bold text-lg">Kontribusi Kamu</p>
+                            <div className="flex gap-4 overflow-x-auto flex-nowrap">
+                                {profile.comments.map((c) => (
+                                    <CommentCard key={c.id} comment={c} />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <p className="font-bold text-lg">
+                                Dapatkan Merchandise
+                            </p>
+                            <div className="flex flex-col gap-4">
+                                {merch.map((m) => (
+                                    <MerchCard key={m.id} merch={m} />
+                                ))}
+                            </div>
                         </div>
                     </div>
                 )}
 
-                {profile.role == "visitor" && (
-                    <div className="flex flex-col gap-2">
-                        <p className="font-bold text-lg">
-                            Dapatkan Merchandise
-                        </p>
-                        <div className="flex flex-col gap-4">
-                            {merch.map((m) => (
-                                <MerchCard key={m.id} merch={m} />
-                            ))}
+                {profile.role == "curator" && (
+                    <div className="flex flex-col gap-12 mt-4">
+                        <div className="flex flex-col gap-2">
+                            <p className="font-bold text-lg">Pameranmu</p>
+                            {/* <CollectionCard collection={} /> */}
                         </div>
+
+                        <Button
+                            className="flex flex-row gap-1 items-center rounded-full bg-yellow-400 hover:bg-yellow-500 font-sf font-medium text-black text-base"
+                            onClick={handleAddExhibitionClick}
+                        >
+                            <Plus className="w-4 h-4" />
+                            Daftarkan Pameran
+                        </Button>
                     </div>
                 )}
             </div>
