@@ -44,7 +44,7 @@ const ExhibitionCard: React.FC<ExhibitionCardProps> = ({
 
     const handleClick = () => {
         if (onClick) {
-            onClick();
+            return onClick();
         }
         navigate(`/exhibition/${exhibition.id}`);
     };

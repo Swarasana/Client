@@ -365,6 +365,11 @@ const Profile: React.FC = () => {
                                                 key={exhibition.id}
                                                 exhibition={exhibition}
                                                 orientation="horizontal"
+                                                onClick={() => {
+                                                    navigate(
+                                                        `/profile/exhibition/${exhibition.id}`
+                                                    );
+                                                }}
                                             />
                                         ))}
                                         {hasMoreExhibitions && (

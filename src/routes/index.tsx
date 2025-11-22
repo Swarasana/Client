@@ -17,6 +17,7 @@ import { Footer, Navbar } from "@/components";
 import { motion } from "framer-motion";
 import Register from "@/pages/Register";
 import AddExhibition from "@/pages/AddExhibition.tsx";
+import ProfileExhibitionDetail from "@/pages/ProfileExhibition";
 // import { AuthProvider } from "@/contexts/AuthContext";
 
 const MainLayout = () => {
@@ -73,6 +74,10 @@ const routes: RouteObject[] = [
             {
                 path: "/profile",
                 element: <Profile />,
+            },
+            {
+                path: "/profile/exhibition/:id",
+                element: <ProfileExhibitionDetail />,
             },
             {
                 path: "/login",
