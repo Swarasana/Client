@@ -6,26 +6,25 @@ import { Input } from "@/components/ui/input";
 import { useState } from "react";
 import { collectionsApi, exhibitionsApi } from "@/api";
 import { useUser } from "@/hooks/useUser";
-import { AddExhibitionResponse, Collection, Exhibition } from "@/types";
+import { Collection } from "@/types";
+import { supabase } from "@/lib/supabase";
+import compressImage from "@/utils/imageCompressor";
 
 const AddExhibition: React.FC = () => {
     const [exhibitionId, setExhibitionId] = useState<string | null>(null);
     const [exhibitionName, setExhibitionName] = useState("");
     const [exhibitionLocation, setExhibitionLocation] = useState("");
     const [exhibitionDesc, setExhibitionDesc] = useState("");
-    const [exhibitionImage, setExhibitionImage] = useState("");
 
-    const [collectionName, setCollectionName] = useState("");
-    const [collectionDate, setCollectionDate] = useState("");
-    const [collectionDesc, setCollectionDesc] = useState("");
-    const [collectionImage, setCollectionImage] = useState("");
-
+    const [selectedImageFile, setSelectedImageFile] = useState<File | null>(
+        null
+    );
+    const [uploadedFileName, setUploadedFileName] = useState("");
+    const [imageUploading, setImageUploading] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
     const [exhibitionSubmitted, setExhibitionSubmitted] = useState(false);
-
-    const [addCollectionType, setAddCollectionType] = useState("");
 
     const [collections, setCollections] = useState<
         {
@@ -33,6 +32,9 @@ const AddExhibition: React.FC = () => {
             artist_name: string;
             description: string;
             image_url: string;
+            image_file: File | null;
+            uploading: boolean;
+            uploadedName: string;
             loading: boolean;
             error: string;
             submitted: boolean;
@@ -51,11 +53,33 @@ const AddExhibition: React.FC = () => {
         if (!user) return;
 
         try {
+            let imageUrl = "";
+
+            if (selectedImageFile) {
+                setImageUploading(true);
+
+                const compressed = await compressImage(selectedImageFile, 0.7);
+
+                const fileName = `${Date.now()}_${selectedImageFile.name}`;
+
+                const { error } = await supabase.storage
+                    .from("exhibitions")
+                    .upload(fileName, compressed);
+
+                if (error) throw error;
+
+                imageUrl = supabase.storage
+                    .from("exhibitions")
+                    .getPublicUrl(fileName).data.publicUrl;
+
+                setImageUploading(false);
+            }
+
             const payload = {
                 name: exhibitionName,
                 location: exhibitionLocation,
                 description: exhibitionDesc,
-                image_url: exhibitionImage,
+                image_url: imageUrl,
                 curator_id: user.id,
                 curator_name: user.display_name,
             };
@@ -80,6 +104,9 @@ const AddExhibition: React.FC = () => {
                 artist_name: "",
                 description: "",
                 image_url: "",
+                image_file: null,
+                uploading: false,
+                uploadedName: "",
                 loading: false,
                 error: "",
                 submitted: false,
@@ -92,6 +119,12 @@ const AddExhibition: React.FC = () => {
             return alert("Submit exhibition first!");
         }
 
+        const col = collections[index];
+
+        if (!col.image_file) {
+            return alert("Unggah gambar koleksi terlebih dahulu");
+        }
+
         setCollections((prev) => {
             const copy = [...prev];
             copy[index].loading = true;
@@ -100,14 +133,25 @@ const AddExhibition: React.FC = () => {
         });
 
         try {
-            const col = collections[index];
+            const compressed = await compressImage(col.image_file, 0.7);
+            const fileName = `${Date.now()}_${col.image_file.name}`;
+
+            const { error } = await supabase.storage
+                .from("collections")
+                .upload(fileName, compressed);
+
+            if (error) throw error;
+
+            const imageUrl = supabase.storage
+                .from("collections")
+                .getPublicUrl(fileName).data.publicUrl;
 
             const createdCollection: Collection =
                 await collectionsApi.createCollection({
                     name: col.name,
                     artist_name: col.artist_name,
                     artist_explanation: col.description,
-                    picture_url: col.image_url,
+                    picture_url: imageUrl,
                     ai_summary_text: "",
                 });
 
@@ -211,17 +255,43 @@ const AddExhibition: React.FC = () => {
 
                             <div className="w-full flex flex-col gap-2">
                                 <label className="w-full text-start font-medium">
-                                    Gambar Pameran (URL)
+                                    Gambar Pameran
                                 </label>
-                                <Input
-                                    type="text"
-                                    value={exhibitionImage}
-                                    onChange={(e) =>
-                                        setExhibitionImage(e.target.value)
-                                    }
-                                    className="w-full py-6 pl-4 pr-2 border-none rounded bg-gray-100 font-sf"
-                                    placeholder="Masukkan URL gambar"
-                                />
+
+                                <label className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 cursor-pointer bg-gray-100 border rounded-lg px-3 py-2 hover:bg-gray-200 transition">
+                                        <Plus className="w-4 h-4" />
+                                        Unggah Gambar
+                                    </div>
+
+                                    {uploadedFileName && (
+                                        <span
+                                            className="flex-grow text-sm text-[#696969] max-w-[150px] truncate text-start"
+                                            title={uploadedFileName}
+                                        >
+                                            File: {uploadedFileName}
+                                        </span>
+                                    )}
+
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="hidden"
+                                        onChange={async (e) => {
+                                            if (!e.target.files?.[0]) return;
+
+                                            const file = e.target.files[0];
+                                            setSelectedImageFile(file);
+                                            setUploadedFileName(file.name);
+                                        }}
+                                    />
+                                </label>
+
+                                {imageUploading && (
+                                    <div className="w-full h-1 bg-gray-200 rounded overflow-hidden">
+                                        <div className="h-full w-1/3 bg-blue-500 animate-pulse"></div>
+                                    </div>
+                                )}
                             </div>
 
                             {error && (
@@ -242,7 +312,7 @@ const AddExhibition: React.FC = () => {
                                 <Button
                                     type="submit"
                                     className="bg-yellow-400 hover:bg-yellow-500 font-sf font-medium text-gray-900 text-sm rounded-full py-3 px-8"
-                                    disabled={loading}
+                                    disabled={loading || imageUploading}
                                 >
                                     {loading ? "Loading..." : "Daftar"}
                                 </Button>
@@ -343,19 +413,60 @@ const AddExhibition: React.FC = () => {
                                         <label className="w-full text-start font-medium">
                                             Gambar Koleksi
                                         </label>
-                                        <Input
-                                            type="text"
-                                            className="w-full py-6 pl-4 pr-2 border-none rounded bg-gray-100 font-sf"
-                                            value={col.image_url}
-                                            onChange={(e) =>
-                                                setCollections((prev) => {
-                                                    const copy = [...prev];
-                                                    copy[index].image_url =
-                                                        e.target.value;
-                                                    return copy;
-                                                })
-                                            }
-                                        />
+
+                                        <label className="flex items-center justify-between cursor-pointer">
+                                            <div className="flex items-center gap-2 bg-gray-100 border rounded-lg px-3 py-2 hover:bg-gray-200 transition">
+                                                <Plus className="w-4 h-4" />
+                                                Unggah Gambar
+                                            </div>
+
+                                            {collections[index]
+                                                .uploadedName && (
+                                                <span
+                                                    className="flex-grow text-sm text-[#696969] max-w-[150px] truncate text-start"
+                                                    title={
+                                                        collections[index]
+                                                            .uploadedName
+                                                    }
+                                                >
+                                                    File:{" "}
+                                                    {
+                                                        collections[index]
+                                                            .uploadedName
+                                                    }
+                                                </span>
+                                            )}
+
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={(e) => {
+                                                    if (!e.target.files?.[0])
+                                                        return;
+
+                                                    const file =
+                                                        e.target.files[0];
+
+                                                    setCollections((prev) => {
+                                                        const copy = [...prev];
+                                                        copy[
+                                                            index
+                                                        ].uploadedName =
+                                                            file.name;
+                                                        copy[index].image_file =
+                                                            file; // store file only
+                                                        return copy;
+                                                    });
+                                                }}
+                                            />
+                                        </label>
+
+                                        {collections[index].uploading && (
+                                            <div className="w-full h-1 bg-gray-200 rounded overflow-hidden">
+                                                <div className="h-full w-1/3 bg-blue-500 animate-pulse"></div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {col.error && (
