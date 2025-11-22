@@ -114,6 +114,10 @@ export class ExhibitionsService extends APIService {
         return this.post<AddExhibitionResponse>("", payload);
     }
 
+    updateExhibition(id: string, payload: Partial<Exhibition>): Promise<any> {
+        return this.put<Exhibition>(`/${id}`, payload);
+    }
+
     addCollectionToExhibition(
         exhibitionId: string,
         payload: { collection_id: string; start_date: string; end_date: string }

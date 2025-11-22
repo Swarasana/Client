@@ -15,6 +15,7 @@ const AddExhibition: React.FC = () => {
     const [exhibitionName, setExhibitionName] = useState("");
     const [exhibitionLocation, setExhibitionLocation] = useState("");
     const [exhibitionDesc, setExhibitionDesc] = useState("");
+    const [exhibitionImageUrl, setExhibitionImageUrl] = useState("");
 
     const [selectedImageFile, setSelectedImageFile] = useState<File | null>(
         null
@@ -24,7 +25,10 @@ const AddExhibition: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
+    const [hasSubmittedExhibitionOnce, setHasSubmittedExhibitionOnce] =
+        useState(false);
     const [exhibitionSubmitted, setExhibitionSubmitted] = useState(false);
+    const [isEditingExhibition, setIsEditingExhibition] = useState(false);
 
     const [collections, setCollections] = useState<
         {
@@ -37,6 +41,7 @@ const AddExhibition: React.FC = () => {
             uploadedName: string;
             loading: boolean;
             error: string;
+            submittedOnce: boolean;
             submitted: boolean;
         }[]
     >([]);
@@ -53,7 +58,7 @@ const AddExhibition: React.FC = () => {
         if (!user) return;
 
         try {
-            let imageUrl = "";
+            let imageUrl = exhibitionImageUrl;
 
             if (selectedImageFile) {
                 setImageUploading(true);
@@ -72,7 +77,10 @@ const AddExhibition: React.FC = () => {
                     .from("exhibitions")
                     .getPublicUrl(fileName).data.publicUrl;
 
+                setExhibitionImageUrl(imageUrl);
                 setImageUploading(false);
+            } else {
+                return alert("Unggah gambar pameran terlebih dahulu");
             }
 
             const payload = {
@@ -84,8 +92,21 @@ const AddExhibition: React.FC = () => {
                 curator_name: user.display_name,
             };
 
-            const response = await exhibitionsApi.addExhibition(payload);
-            setExhibitionId(response.id);
+            let response;
+
+            if (!exhibitionId) {
+                response = await exhibitionsApi.addExhibition(payload);
+                setExhibitionId(response.id);
+                setHasSubmittedExhibitionOnce(true);
+            } else {
+                response = await exhibitionsApi.updateExhibition(
+                    exhibitionId,
+                    payload
+                );
+                console.log(response);
+            }
+
+            setIsEditingExhibition(false);
             setExhibitionSubmitted(true);
 
             console.log("exhibition id", response.id);
@@ -109,6 +130,7 @@ const AddExhibition: React.FC = () => {
                 uploadedName: "",
                 loading: false,
                 error: "",
+                submittedOnce: false,
                 submitted: false,
             },
         ]);
@@ -128,6 +150,7 @@ const AddExhibition: React.FC = () => {
         setCollections((prev) => {
             const copy = [...prev];
             copy[index].loading = true;
+            copy[index].uploading = true;
             copy[index].error = "";
             return copy;
         });
@@ -164,6 +187,8 @@ const AddExhibition: React.FC = () => {
             setCollections((prev) => {
                 const copy = [...prev];
                 copy[index].loading = false;
+                copy[index].uploading = false;
+                copy[index].submittedOnce = true;
                 copy[index].submitted = true;
                 return copy;
             });
@@ -210,9 +235,11 @@ const AddExhibition: React.FC = () => {
                                 <Input
                                     type="text"
                                     value={exhibitionName}
-                                    onChange={(e) =>
-                                        setExhibitionName(e.target.value)
-                                    }
+                                    onChange={(e) => {
+                                        setExhibitionName(e.target.value);
+                                        setIsEditingExhibition(true);
+                                        setExhibitionSubmitted(false);
+                                    }}
                                     className="w-full py-6 pl-4 pr-2 border-none rounded bg-gray-100 font-sf"
                                     required
                                 />
@@ -225,9 +252,11 @@ const AddExhibition: React.FC = () => {
                                 <Input
                                     type="text"
                                     value={exhibitionLocation}
-                                    onChange={(e) =>
-                                        setExhibitionLocation(e.target.value)
-                                    }
+                                    onChange={(e) => {
+                                        setExhibitionLocation(e.target.value);
+                                        setIsEditingExhibition(true);
+                                        setExhibitionSubmitted(false);
+                                    }}
                                     className="w-full py-6 pl-4 pr-2 border-none rounded bg-gray-100 font-sf"
                                     required
                                 />
@@ -239,11 +268,13 @@ const AddExhibition: React.FC = () => {
                                 </label>
                                 <textarea
                                     value={exhibitionDesc}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
                                         setExhibitionDesc(
                                             e.target.value.slice(0, 500)
-                                        )
-                                    }
+                                        );
+                                        setIsEditingExhibition(true);
+                                        setExhibitionSubmitted(false);
+                                    }}
                                     className="w-full h-32 p-4 rounded bg-gray-100 font-sf text-start resize-y overflow-auto"
                                     placeholder="Tulis deskripsi pameran..."
                                     required
@@ -283,6 +314,9 @@ const AddExhibition: React.FC = () => {
                                             const file = e.target.files[0];
                                             setSelectedImageFile(file);
                                             setUploadedFileName(file.name);
+
+                                            setIsEditingExhibition(true);
+                                            setExhibitionSubmitted(false);
                                         }}
                                     />
                                 </label>
@@ -311,10 +345,18 @@ const AddExhibition: React.FC = () => {
                                 )}
                                 <Button
                                     type="submit"
-                                    className="bg-yellow-400 hover:bg-yellow-500 font-sf font-medium text-gray-900 text-sm rounded-full py-3 px-8"
-                                    disabled={loading || imageUploading}
+                                    className="bg-yellow-400 hover:bg-yellow-500 disabled:bg-[#C4C4C4] font-sf font-medium text-gray-900 text-sm rounded-full py-3 px-8"
+                                    disabled={
+                                        loading ||
+                                        imageUploading ||
+                                        exhibitionSubmitted
+                                    }
                                 >
-                                    {loading ? "Loading..." : "Daftar"}
+                                    {loading
+                                        ? "Loading..."
+                                        : hasSubmittedExhibitionOnce
+                                        ? "Ubah"
+                                        : "Daftar"}
                                 </Button>
                             </div>
                         </form>
@@ -358,6 +400,8 @@ const AddExhibition: React.FC = () => {
                                                     const copy = [...prev];
                                                     copy[index].name =
                                                         e.target.value;
+                                                    copy[index].submitted =
+                                                        false;
                                                     return copy;
                                                 })
                                             }
@@ -378,6 +422,8 @@ const AddExhibition: React.FC = () => {
                                                     const copy = [...prev];
                                                     copy[index].artist_name =
                                                         e.target.value;
+                                                    copy[index].submitted =
+                                                        false;
                                                     return copy;
                                                 })
                                             }
@@ -396,6 +442,8 @@ const AddExhibition: React.FC = () => {
                                                     const copy = [...prev];
                                                     copy[index].description =
                                                         e.target.value;
+                                                    copy[index].submitted =
+                                                        false;
                                                     return copy;
                                                 })
                                             }
@@ -455,7 +503,9 @@ const AddExhibition: React.FC = () => {
                                                         ].uploadedName =
                                                             file.name;
                                                         copy[index].image_file =
-                                                            file; // store file only
+                                                            file;
+                                                        copy[index].submitted =
+                                                            false;
                                                         return copy;
                                                     });
                                                 }}
@@ -487,16 +537,20 @@ const AddExhibition: React.FC = () => {
                                         <Button
                                             type="submit"
                                             className="bg-yellow-400 hover:bg-yellow-500 disabled:bg-[#C4C4C4] font-sf font-medium text-gray-900 text-sm rounded-full py-3 px-8"
-                                            disabled={loading || col.submitted}
+                                            disabled={
+                                                loading ||
+                                                imageUploading ||
+                                                col.submitted
+                                            }
                                         >
                                             {loading
                                                 ? "Loading..."
-                                                : col.submitted
+                                                : col.submittedOnce
                                                 ? "Ubah"
                                                 : "Simpan"}
                                         </Button>
                                     </div>
-                                    {col.submitted && (
+                                    {col.submittedOnce && (
                                         <div className="flex flex-row w-full">
                                             <div className="flex flex-row flex-grow"></div>
                                             <Button
