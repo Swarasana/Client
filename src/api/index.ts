@@ -10,6 +10,7 @@ import {
     VisitorAnalytics,
     User,
     Merch,
+    Level,
 } from "@/types";
 import { api, apiAuth, APIService } from "./base";
 
@@ -163,7 +164,18 @@ export class UserService extends APIService {
     }
 }
 
-// 6. Merchandises API
+// 6. Levels API
+export class LevelService extends APIService {
+    constructor(apiInstance: AxiosInstance) {
+        super(apiInstance, "levels");
+    }
+
+    getLevels(): Promise<Level[]> {
+        return this.get("/");
+    }
+}
+
+// 7. Merchandises API
 export class MerchService extends APIService {
     constructor(apiInstance: AxiosInstance) {
         super(apiInstance, "merch");
@@ -180,4 +192,5 @@ export const commentsApi = new CommentsService(api);
 export const exhibitionsApi = new ExhibitionsService(api);
 export const visitorsApi = new VisitorsService(api);
 export const userApi = new UserService(api);
+export const levelsApi = new LevelService(api);
 export const merchApi = new MerchService(api);
