@@ -91,6 +91,12 @@ export interface Collection {
     updated_at: string;
 }
 
+export interface AddExhibitionResponse {
+    success: boolean;
+    data: Exhibition;
+    message: string;
+}
+
 // Visitor Counter Types
 export interface VisitorCount {
     visitorCount: number;

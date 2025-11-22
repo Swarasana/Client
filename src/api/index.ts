@@ -11,6 +11,7 @@ import {
     User,
     Merch,
     Level,
+    AddExhibitionResponse,
 } from "@/types";
 import { api, apiAuth, APIService } from "./base";
 
@@ -18,6 +19,16 @@ import { api, apiAuth, APIService } from "./base";
 export class CollectionsService extends APIService {
     constructor(apiInstance: AxiosInstance) {
         super(apiInstance, "collections");
+    }
+
+    createCollection(payload: {
+        name: string;
+        picture_url?: string;
+        artist_name: string;
+        artist_explanation: string;
+        ai_summary_text?: string;
+    }): Promise<Collection> {
+        return this.post<Collection>("", payload);
     }
 
     getById(id: string): Promise<Collection> {
@@ -99,8 +110,15 @@ export class ExhibitionsService extends APIService {
         );
     }
 
-    addExhibition(payload: Partial<Exhibition>) {
-        return this.post("", payload);
+    addExhibition(payload: Partial<Exhibition>): Promise<any> {
+        return this.post<AddExhibitionResponse>("", payload);
+    }
+
+    addCollectionToExhibition(
+        exhibitionId: string,
+        payload: { collection_id: string; start_date: string; end_date: string }
+    ) {
+        return this.post(`/${exhibitionId}/collections`, payload);
     }
 }
 
