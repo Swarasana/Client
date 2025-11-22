@@ -47,7 +47,7 @@ const CommentCard: React.FC<CommentCardProps> = ({ comment, onClick }) => {
                                 <h3 className="flex-grow font-semibold text-base leading-tight">
                                     {comment.collection_name}
                                 </h3>
-                                <div className="flex flex-row items-center gap-1 rounded-full bg-yellow-300 px-2 py-1">
+                                <div className="flex flex-row items-center gap-1 rounded-full bg-yellow-400 px-2 py-1">
                                     <img
                                         src={trophy}
                                         alt="Poin"

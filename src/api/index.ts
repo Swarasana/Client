@@ -9,6 +9,7 @@ import {
     TrendingCollection,
     VisitorAnalytics,
     User,
+    Merch,
 } from "@/types";
 import { api, apiAuth, APIService } from "./base";
 
@@ -162,9 +163,21 @@ export class UserService extends APIService {
     }
 }
 
+// 6. Merchandises API
+export class MerchService extends APIService {
+    constructor(apiInstance: AxiosInstance) {
+        super(apiInstance, "merch");
+    }
+
+    getMerch(): Promise<Merch[]> {
+        return this.get("/");
+    }
+}
+
 // Initialize and Export API Objects
 export const collectionsApi = new CollectionsService(api);
 export const commentsApi = new CommentsService(api);
 export const exhibitionsApi = new ExhibitionsService(api);
 export const visitorsApi = new VisitorsService(api);
 export const userApi = new UserService(api);
+export const merchApi = new MerchService(api);

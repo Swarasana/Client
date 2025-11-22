@@ -43,7 +43,7 @@ export interface Profile {
     updated_at: string;
     password: string;
     points: number;
-    level_id: string;
+    level: UserLevel;
     comments: UserComment[];
 }
 
@@ -54,6 +54,29 @@ export interface UserComment {
     collection_id: string;
     collection_name: string;
     exhibition_name: string;
+}
+
+export interface UserLevel {
+    id: string;
+    level_name: string;
+    minimum_points: number;
+}
+
+export interface Level {
+    id: string;
+    level_number: number;
+    level_name: string;
+    desc: string;
+    minimum_points: number;
+    avatar_url: string;
+}
+
+export interface Merch {
+    id: number;
+    name: string;
+    desc: string;
+    price: number;
+    exhibition: string;
 }
 
 export interface Collection {
@@ -123,5 +146,4 @@ export interface User {
     display_name: string;
     password: string;
     points: number;
-    level_id: string;
 }
