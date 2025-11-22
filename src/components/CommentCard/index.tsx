@@ -8,10 +8,15 @@ import { UserComment } from "@/types";
 
 interface CommentCardProps {
     comment: UserComment;
+    className: string;
     onClick?: () => void;
 }
 
-const CommentCard: React.FC<CommentCardProps> = ({ comment, onClick }) => {
+const CommentCard: React.FC<CommentCardProps> = ({
+    comment,
+    className,
+    onClick,
+}) => {
     const navigate = useNavigate();
 
     const handleClick = () => {
@@ -33,7 +38,7 @@ const CommentCard: React.FC<CommentCardProps> = ({ comment, onClick }) => {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex-none w-[320px] snap-start"
+            className={`flex-none w-[320px] snap-start ${className}`}
             onClick={handleClick}
         >
             <Card

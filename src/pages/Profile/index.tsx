@@ -125,11 +125,11 @@ const Profile: React.FC = () => {
 
     return (
         <main
-            className={`flex flex-col w-full h-full min-h-screen bg-gradient-to-t ${
+            className={`flex flex-col w-full max-w-screen h-full min-h-screen bg-gradient-to-t ${
                 profile.role == "curator"
                     ? "from-[#1371AB] via-blue1 to-blue1"
                     : "from-blue1 via-blue1 to-blue2"
-            } text-white`}
+            } text-white overflow-y-auto`}
         >
             <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0] z-0">
                 <img
@@ -202,23 +202,8 @@ const Profile: React.FC = () => {
                 )}
             </AnimatePresence>
 
-            <div className="flex flex-col top-0 w-full max-w-screen px-6 gap-0 items-start z-10 font-sf">
-                <div className="flex justify-between items-center py-4 flex-shrink-0">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => navigate(-1)}
-                        className={`hover:bg-white/10 p-2 rounded-full ${
-                            profile.role == "visitor"
-                                ? "text-white"
-                                : "text-black"
-                        }`}
-                    >
-                        <ChevronLeft className="w-6 h-6" />
-                    </Button>
-                </div>
-
-                <div className="flex flex-row gap-4 w-full mb-12 text-white">
+            <div className="flex flex-col top-0 w-full max-w-screen py-12 gap-0 items-start z-10 font-sf">
+                <div className="flex flex-row gap-4 px-4  w-full mb-12 text-white">
                     <div className="w-24 h-24 rounded-full bg-[#78C49E] flex-shrink-0">
                         <img
                             src={profile.user_pic_url ?? visitor}
@@ -266,8 +251,8 @@ const Profile: React.FC = () => {
                 </div>
 
                 {profile.role == "visitor" && (
-                    <div className="flex flex-col gap-12 mt-4">
-                        <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-12 mt-8 w-full">
+                        <div className="flex flex-col gap-2 px-4">
                             <p className="font-bold text-lg">
                                 Koleksi yang Pernah Kamu Lihat
                             </p>
@@ -275,15 +260,35 @@ const Profile: React.FC = () => {
                         </div>
 
                         <div className="flex flex-col gap-4">
-                            <p className="font-bold text-lg">Kontribusi Kamu</p>
-                            <div className="flex gap-4 overflow-x-auto flex-nowrap">
-                                {profile.comments.map((c) => (
-                                    <CommentCard key={c.id} comment={c} />
-                                ))}
-                            </div>
+                            <p className="mx-4 font-bold text-lg">
+                                Kontribusi Kamu
+                            </p>
+                            {profile.comments.length > 0 ? (
+                                <div className="flex gap-4 overflow-x-auto flex-nowrap">
+                                    {profile.comments.map((c, i) => (
+                                        <CommentCard
+                                            key={c.id}
+                                            comment={c}
+                                            className={
+                                                i === 0
+                                                    ? "ml-4"
+                                                    : i ===
+                                                      profile.comments.length -
+                                                          1
+                                                    ? "mr-4"
+                                                    : ""
+                                            }
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <p>
+                                    Kamu belum meninggalkan komentar apa pun...
+                                </p>
+                            )}
                         </div>
 
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2 px-4">
                             <p className="font-bold text-lg">
                                 Dapatkan Merchandise
                             </p>
@@ -297,7 +302,7 @@ const Profile: React.FC = () => {
                 )}
 
                 {profile.role == "curator" && (
-                    <div className="flex flex-col gap-8 w-full mt-4 mb-16">
+                    <div className="flex flex-col gap-8 w-full mt-8 mb-16">
                         <div className="flex flex-col gap-2 w-full">
                             <p className="font-bold text-lg">Pameranmu</p>
                             <div className="flex flex-col gap-4">
@@ -312,7 +317,7 @@ const Profile: React.FC = () => {
                                     <Button
                                         onClick={loadMoreExhibitions}
                                         disabled={loadingExhibitions}
-                                        className="w-full text-white rounded-full"
+                                        className="w-full text-white rounded-full disabled:bg-transparent hover:bg-transparent hover:text-yellow-300"
                                         variant="ghost"
                                     >
                                         {loadingExhibitions

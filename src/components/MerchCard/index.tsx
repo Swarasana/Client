@@ -18,7 +18,7 @@ const MerchCard: React.FC<MerchCardProps> = ({ merch }) => {
             animate={{ opacity: 1, y: 0 }}
             className="flex-none w-full snap-start"
         >
-            <Card className="bg-[#F0F0F0] h-full rounded-3xl p-4 hover:bg-white/20 transition-all duration-300 font-sf text-black">
+            <Card className="bg-[#F0F0F0] h-full rounded-3xl p-4 hover:bg-white/20 hover:text-white/40 transition-all duration-300 font-sf text-black">
                 <CardContent className="p-0 flex flex-col h-full">
                     <div className="flex flex-col gap-2 h-full">
                         <div className="flex flex-col gap-0">
