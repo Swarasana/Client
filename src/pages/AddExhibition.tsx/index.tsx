@@ -576,7 +576,6 @@ const AddExhibition: React.FC = () => {
                             </Button>
                             <Button
                                 className="flex flex-row flex-grow gap-1 items-center rounded-full bg-[#B4EACF] hover:bg-[#78C49E] disabled:text-black/40 py-6 font-sf font-bold text-black text-sm"
-                                // onClick={}
                                 disabled
                             >
                                 <Plus className="w-4 h-4" />

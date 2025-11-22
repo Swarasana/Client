@@ -10,9 +10,10 @@ import curator from "@/assets/images/anton.png";
 import trophy from "@/assets/images/trophy.svg";
 import trophyYellow from "@/assets/images/trophy-yellow.svg";
 import CommentCard from "@/components/CommentCard";
-import { levelsApi, merchApi, userApi } from "@/api";
-import { Level, Merch, Profile as ProfileType } from "@/types";
+import { exhibitionsApi, levelsApi, merchApi, userApi } from "@/api";
+import { Exhibition, Level, Merch, Profile as ProfileType } from "@/types";
 import MerchCard from "@/components/MerchCard";
+import { ExhibitionCard } from "@/components";
 
 const Profile: React.FC = () => {
     const [profile, setProfile] = useState<ProfileType | null>(null);
@@ -28,6 +29,13 @@ const Profile: React.FC = () => {
         right: 0,
     });
 
+    const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
+    const [exhibitionsCursor, setExhibitionsCursor] = useState<string | null>(
+        null
+    );
+    const [hasMoreExhibitions, setHasMoreExhibitions] = useState(true);
+    const [loadingExhibitions, setLoadingExhibitions] = useState(false);
+
     const levelsRef = useRef<HTMLDivElement>(null);
 
     const navigate = useNavigate();
@@ -36,18 +44,45 @@ const Profile: React.FC = () => {
         load();
     }, []);
 
+    useEffect(() => {
+        if (profile?.id && profile?.role == "curator") loadMoreExhibitions();
+    }, [profile]);
+
     async function load() {
         const p = await userApi.getProfile();
         setProfile(p.user);
         console.log(p.user);
 
-        const levelsList = await levelsApi.getLevels();
-        setLevels(levelsList);
-        console.log(levelsList);
+        if (p.user.role == "visitor") {
+            const levelsList = await levelsApi.getLevels();
+            setLevels(levelsList);
+            console.log(levelsList);
 
-        const merchList = await merchApi.getMerch();
-        setMerch(merchList);
-        console.log(merchList);
+            const merchList = await merchApi.getMerch();
+            setMerch(merchList);
+            console.log(merchList);
+        }
+    }
+
+    async function loadMoreExhibitions() {
+        if (loadingExhibitions || !hasMoreExhibitions) return;
+
+        setLoadingExhibitions(true);
+
+        const res = await exhibitionsApi.getAll({
+            curatorId: profile!.id,
+            limit: "2",
+            cursor: exhibitionsCursor ?? null,
+        });
+
+        const { data, pagination } = res;
+
+        setExhibitions((prev) => [...prev, ...data]);
+
+        setExhibitionsCursor(pagination.nextCursor);
+        setHasMoreExhibitions(pagination.hasMore);
+
+        setLoadingExhibitions(false);
     }
 
     useEffect(() => {
@@ -90,11 +125,11 @@ const Profile: React.FC = () => {
 
     return (
         <main
-            className={`flex flex-col w-full h-screen bg-gradient-to-t ${
+            className={`flex flex-col w-full h-full min-h-screen bg-gradient-to-t ${
                 profile.role == "curator"
                     ? "from-[#1371AB] via-blue1 to-blue1"
                     : "from-blue1 via-blue1 to-blue2"
-            } text-white overflow-hidden`}
+            } text-white`}
         >
             <div className="absolute top-0 left-0 w-full overflow-hidden leading-[0] z-0">
                 <img
@@ -262,14 +297,34 @@ const Profile: React.FC = () => {
                 )}
 
                 {profile.role == "curator" && (
-                    <div className="flex flex-col gap-12 mt-4">
-                        <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-8 w-full mt-4 mb-16">
+                        <div className="flex flex-col gap-2 w-full">
                             <p className="font-bold text-lg">Pameranmu</p>
-                            {/* <CollectionCard collection={} /> */}
+                            <div className="flex flex-col gap-4">
+                                {exhibitions.map((exhibition) => (
+                                    <ExhibitionCard
+                                        key={exhibition.id}
+                                        exhibition={exhibition}
+                                        orientation="horizontal"
+                                    />
+                                ))}
+                                {hasMoreExhibitions && (
+                                    <Button
+                                        onClick={loadMoreExhibitions}
+                                        disabled={loadingExhibitions}
+                                        className="w-full text-white rounded-full"
+                                        variant="ghost"
+                                    >
+                                        {loadingExhibitions
+                                            ? "Loading..."
+                                            : "Muat lebih banyak"}
+                                    </Button>
+                                )}
+                            </div>
                         </div>
 
                         <Button
-                            className="flex flex-row gap-1 items-center rounded-full bg-yellow-400 hover:bg-yellow-500 font-sf font-medium text-black text-base"
+                            className="flex flex-row gap-1 items-center w-fit rounded-full bg-yellow-400 hover:bg-yellow-500 font-sf font-medium text-black text-base"
                             onClick={handleAddExhibitionClick}
                         >
                             <Plus className="w-4 h-4" />
