@@ -52,7 +52,6 @@ const SearchPage: React.FC = () => {
 
   const exhibitions = data?.pages?.flatMap(page => page.data) || [];
 
-  // Infinite scroll handler
   const handleScroll = useCallback(() => {
     if (
       window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 1000 &&
