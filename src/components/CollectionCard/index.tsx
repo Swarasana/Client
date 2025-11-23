@@ -8,8 +8,8 @@ import { ArtsyImagePlaceholder } from "@/components";
 interface Collection {
     id: string;
     name: string;
-    location: string;
-    image_url?: string;
+    picture_url?: string;
+    artist_name: string;
 }
 
 interface CollectionCardProps {
@@ -40,7 +40,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
         if (onClick) {
             onClick();
         }
-        navigate(`/collections/${collection.id}`);
+        navigate(`/collection/${collection.id}`);
     };
 
     return (
@@ -63,7 +63,7 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
                     >
                         {/* Image with Artsy Placeholder */}
                         <ArtsyImagePlaceholder
-                            src={collection.image_url}
+                            src={collection.picture_url}
                             alt={collection.name}
                             name={collection.name}
                             variant="aspect-fill"
@@ -79,6 +79,13 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
                             <div className="absolute inset-0 border-4 border-yellow-400 rounded-3xl z-20 pointer-events-none" />
                         )}
 
+                        {/* Chevron - Top Right */}
+                        <div className="absolute top-4 right-4 z-30">
+                            <div className="text-white hover:bg-white/20 text-xs px-1 py-1 rounded cursor-pointer transition-colors">
+                                <ArrowUpRight className="w-5 h-5" />
+                            </div>
+                        </div>
+
                         {/* Text Content */}
                         <div
                             className={`absolute ${
@@ -90,14 +97,6 @@ const CollectionCard: React.FC<CollectionCardProps> = ({
                             <h3 className="text-yellow1 font-sf font-bold mb-1 text-xl line-clamp-2 leading-tight">
                                 {collection.name}
                             </h3>
-                            <div className="flex justify-between items-center">
-                                <p className="text-white/80 font-inter text-sm">
-                                    {collection.location}
-                                </p>
-                                <div className="text-white hover:bg-white/20 text-xs px-1 py-1 rounded-full cursor-pointer transition-colors">
-                                    <ArrowUpRight className="w-5 h-5" />
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </CardContent>

@@ -9,16 +9,19 @@ import visitor from "@/assets/images/visitor.png";
 import trophy from "@/assets/images/trophy.svg";
 import trophyYellow from "@/assets/images/trophy-yellow.svg";
 import CommentCard from "@/components/CommentCard";
-import { exhibitionsApi, levelsApi, merchApi, userApi } from "@/api";
-import { Exhibition, Level, Merch, Profile as ProfileType } from "@/types";
+import { exhibitionsApi, levelsApi, merchApi, userApi, visitorsApi } from "@/api";
+import { Collection, Exhibition, Level, Merch, Profile as ProfileType } from "@/types";
 import MerchCard from "@/components/MerchCard";
 import { ExhibitionCard } from "@/components";
 import { Skeleton } from "@/components/ui/skeleton";
+import CollectionCard from "@/components/CollectionCard";
 
 const Profile: React.FC = () => {
     const [profile, setProfile] = useState<ProfileType | null>(null);
     const [merch, setMerch] = useState<Merch[]>([]);
     const [levels, setLevels] = useState<Level[]>([]);
+    const [visitedCollections, setVisitedCollections] = useState<Collection[]>([]);
+    const [loadingVisitedCollections, setLoadingVisitedCollections] = useState(false);
 
     const [showLevelsOverlay, setShowLevelsOverlay] = useState(false);
     const [levelsOverlayPos, setLevelsOverlayPos] = useState<{
@@ -50,6 +53,7 @@ const Profile: React.FC = () => {
 
     useEffect(() => {
         if (profile?.id && profile?.role == "curator") loadMoreExhibitions();
+        if (profile?.id && profile?.role == "visitor") loadVisitedCollections();
     }, [profile]);
 
     async function load() {
@@ -87,6 +91,26 @@ const Profile: React.FC = () => {
         setHasMoreExhibitions(pagination.hasMore);
 
         setLoadingExhibitions(false);
+    }
+
+    async function loadVisitedCollections() {
+        if (loadingVisitedCollections) return;
+
+        setLoadingVisitedCollections(true);
+        try {
+            const collections = await visitorsApi.getUserVisitedCollections();
+            
+            // Ensure uniqueness based on collection ID
+            const uniqueCollections = collections.filter((collection, index, self) => 
+                index === self.findIndex(c => c.id === collection.id)
+            );
+            
+            setVisitedCollections(uniqueCollections);
+        } catch (error) {
+            console.error("Failed to load visited collections:", error);
+            setVisitedCollections([]);
+        }
+        setLoadingVisitedCollections(false);
     }
 
     useEffect(() => {
@@ -143,8 +167,64 @@ const Profile: React.FC = () => {
 
     if (!profile) {
         return (
-            <main className="flex items-center justify-center h-screen text-white">
-                Loading...
+            <main className="flex flex-col w-full max-w-screen h-full min-h-screen bg-gradient-to-t from-blue1 via-blue1 to-blue2 text-white overflow-y-auto">
+                <motion.div
+                    className="absolute top-0 left-0 w-full overflow-hidden leading-[0] z-0"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2, delay: 0.1 }}
+                >
+                    <img
+                        src={headerPatternVisitor}
+                        alt="Motif latar belakang"
+                        className="w-full"
+                    />
+                </motion.div>
+
+                <motion.div
+                    className="flex flex-col top-0 w-full max-w-screen py-12 gap-0 items-start z-10 font-sf"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                    <div className="flex flex-row gap-4 px-4 w-full mb-12 text-white">
+                        <Skeleton className="w-24 h-24 rounded-full bg-white/20" />
+                        <div className="flex flex-col gap-2 grow max-w-full min-w-0 justify-center">
+                            <Skeleton className="h-8 w-48 bg-white/20 rounded-lg" />
+                            <Skeleton className="h-5 w-24 bg-white/20 rounded-lg" />
+                            <Skeleton className="h-8 w-full bg-white/20 rounded-3xl" />
+                        </div>
+                    </div>
+
+                    <div className="flex flex-col gap-8 mt-8 w-full">
+                        <div className="flex flex-col gap-2 px-4">
+                            <Skeleton className="h-6 w-56 bg-white/20 rounded-lg" />
+                            <div className="flex gap-4 overflow-x-auto flex-nowrap">
+                                {Array.from({ length: 3 }, (_, i) => (
+                                    <Skeleton key={i} className="w-[160px] h-[209px] min-w-[160px] rounded-3xl bg-white/20" />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-4">
+                            <Skeleton className="mx-4 h-6 w-40 bg-white/20 rounded-lg" />
+                            <div className="flex gap-4 overflow-x-auto flex-nowrap">
+                                {Array.from({ length: 2 }, (_, i) => (
+                                    <Skeleton key={i} className="w-80 h-32 min-w-80 rounded-3xl bg-white/20" />
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2 px-4">
+                            <Skeleton className="h-6 w-48 bg-white/20 rounded-lg" />
+                            <div className="flex flex-col gap-4">
+                                {Array.from({ length: 2 }, (_, i) => (
+                                    <Skeleton key={i} className="h-20 w-full bg-white/20 rounded-3xl" />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </motion.div>
             </main>
         );
     }
@@ -331,57 +411,91 @@ const Profile: React.FC = () => {
                             <p className="font-bold text-lg">
                                 Koleksi yang Pernah Kamu Lihat
                             </p>
-                            {/* <CollectionCard collection={} /> */}
-                            <motion.div
-                                className="text-center py-6 bg-white/20 border border-white rounded-3xl"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.5, delay: 0.8 }}
-                            >
-                                <div className="text-gray-400 mb-2">
-                                    <div className="w-12 h-12 mx-auto mb-2 bg-gray-50/50 rounded-full flex items-center justify-center">
-                                        <span className="text-2xl">🏛️</span>
-                                    </div>
-                                    <h3 className="mb-1 text-base font-sf font-semibold text-white">
-                                        Tidak Ada Koleksi
-                                    </h3>
-                                    <p className="text-white/70 text-xs">
-                                        Kamu belum pernah melihat koleksi
-                                    </p>
-                                </div>
-                            </motion.div>
-                        </div>
-
-                        <div className="flex flex-col gap-4">
-                            <p className="mx-4 font-bold text-lg">
-                                Kontribusi Kamu
-                            </p>
-                            {profile.comments.length > 0 ? (
+                            {loadingVisitedCollections ? (
                                 <div className="flex gap-4 overflow-x-auto flex-nowrap">
-                                    {profile.comments.map((c, i) => (
-                                        <CommentCard
-                                            key={c.id}
-                                            comment={c}
-                                            className={`${
-                                                profile.comments.length == 1
-                                                    ? "!w-[calc(100vw-2rem)]"
-                                                    : ""
-                                            } ${i === 0 ? "ml-4" : ""} ${
-                                                i ===
-                                                profile.comments.length - 1
-                                                    ? "mr-4"
-                                                    : ""
-                                            }
-                                                    `}
+                                    {Array.from({ length: 3 }, (_, i) => (
+                                        <Skeleton key={i} className="w-[160px] h-[209px] min-w-[160px] rounded-3xl flex-shrink-0" />
+                                    ))}
+                                </div>
+                            ) : visitedCollections.length > 0 ? (
+                                <div className="flex gap-4 overflow-x-auto flex-nowrap">
+                                    {visitedCollections.map((collection) => (
+                                        <CollectionCard
+                                            key={collection.id}
+                                            collection={collection}
+                                            variant="mobile"
+                                            mobileSize="small"
                                         />
                                     ))}
                                 </div>
                             ) : (
                                 <motion.div
-                                    className="text-center py-6 bg-white/20 border border-white rounded-3xl mx-4"
+                                    className="text-center py-6 bg-white/20 border border-white rounded-3xl"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ duration: 0.5, delay: 0.8 }}
+                                >
+                                    <div className="text-gray-400 mb-2">
+                                        <div className="w-12 h-12 mx-auto mb-2 bg-gray-50/50 rounded-full flex items-center justify-center">
+                                            <span className="text-2xl">🏛️</span>
+                                        </div>
+                                        <h3 className="mb-1 text-base font-sf font-semibold text-white">
+                                            Belum Ada Koleksi yang Dikunjungi
+                                        </h3>
+                                        <p className="text-white/70 text-xs">
+                                            Mulai jelajahi koleksi untuk melihat riwayat kunjungan
+                                        </p>
+                                    </div>
+                                </motion.div>
+                            )}
+                        </div>
+
+                        <motion.div 
+                            className="flex flex-col gap-4"
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.4 }}
+                        >
+                            <p className="mx-4 font-bold text-lg">
+                                Kontribusi Kamu
+                            </p>
+                            {profile.comments.length > 0 ? (
+                                <motion.div 
+                                    className="flex gap-4 overflow-x-auto flex-nowrap"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.6 }}
+                                >
+                                    {profile.comments.map((c, i) => (
+                                        <motion.div
+                                            key={c.id}
+                                            initial={{ opacity: 0, scale: 0.9 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ duration: 0.4, delay: 0.7 + i * 0.1 }}
+                                        >
+                                            <CommentCard
+                                                comment={c}
+                                                className={`${
+                                                    profile.comments.length == 1
+                                                        ? "!w-[calc(100vw-2rem)]"
+                                                        : ""
+                                                } ${i === 0 ? "ml-4" : ""} ${
+                                                    i ===
+                                                    profile.comments.length - 1
+                                                        ? "mr-4"
+                                                        : ""
+                                                }
+                                                        `}
+                                            />
+                                        </motion.div>
+                                    ))}
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    className="text-center py-6 bg-white/20 border border-white rounded-3xl mx-4"
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ duration: 0.5, delay: 0.6 }}
                                 >
                                     <div className="text-gray-400 mb-2">
                                         <div className="w-12 h-12 mx-auto mb-2 bg-gray-50/50 rounded-full flex items-center justify-center">
@@ -397,18 +511,35 @@ const Profile: React.FC = () => {
                                     </div>
                                 </motion.div>
                             )}
-                        </div>
+                        </motion.div>
 
-                        <div className="flex flex-col gap-2 px-4">
+                        <motion.div 
+                            className="flex flex-col gap-2 px-4"
+                            initial={{ opacity: 0, y: 30 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.6, delay: 0.5 }}
+                        >
                             <p className="font-bold text-lg">
                                 Dapatkan Merchandise
                             </p>
-                            <div className="flex flex-col gap-4">
-                                {merch.map((m) => (
-                                    <MerchCard key={m.id} merch={m} />
+                            <motion.div 
+                                className="flex flex-col gap-4"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ duration: 0.5, delay: 0.7 }}
+                            >
+                                {merch.map((m, i) => (
+                                    <motion.div
+                                        key={m.id}
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ duration: 0.4, delay: 0.8 + i * 0.1 }}
+                                    >
+                                        <MerchCard merch={m} />
+                                    </motion.div>
                                 ))}
-                            </div>
-                        </div>
+                            </motion.div>
+                        </motion.div>
                     </div>
                 )}
 

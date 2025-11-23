@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
     ChevronLeft,
-    Edit,
     Heart,
     MessageSquare,
     Pen,
@@ -12,7 +11,7 @@ import {
 } from "lucide-react";
 import { exhibitionsApi } from "@/api";
 import { Button } from "@/components/ui/button";
-import { ErrorState, ArtsyImagePlaceholder } from "@/components";
+import { ErrorState } from "@/components";
 import { Collection } from "@/types";
 import headerPattern from "@/assets/images/header-pattern-gradient.svg";
 import { Card, CardContent } from "@/components/ui/card";

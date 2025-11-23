@@ -26,11 +26,11 @@ const CommentCard: React.FC<CommentCardProps> = ({
         navigate(`/collection/${comment.collection_id}`);
     };
 
-    const handleLikeCommentClick = (commentId: string) => {
+    const handleLikeCommentClick = (_commentId: string) => {
         //
     };
 
-    const handleDislikeCommentClick = (commentId: string) => {
+    const handleDislikeCommentClick = (_commentId: string) => {
         //
     };
 
@@ -42,17 +42,17 @@ const CommentCard: React.FC<CommentCardProps> = ({
             onClick={handleClick}
         >
             <Card
-                className="bg-white h-full rounded-3xl p-4 transition-all duration-300 font-sf text-black"
+                className="bg-white h-full rounded-3xl p-4 transition-all duration-300 font-sf text-black cursor-pointer hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]"
                 onClick={handleClick}
             >
                 <CardContent className="p-0 flex flex-col h-full">
-                    <div className="flex flex-col gap-2 h-full">
-                        <div className="flex flex-col gap-0">
-                            <div className="flex flex-row">
-                                <h3 className="flex-grow font-semibold text-base leading-tight">
+                    <div className="flex flex-col gap-3 h-full">
+                        <div className="flex flex-col gap-1 min-h-[3.5rem]">
+                            <div className="flex flex-row items-start gap-2 min-h-[2.5rem]">
+                                <h3 className="flex-grow font-semibold text-base leading-tight line-clamp-2">
                                     {comment.collection_name}
                                 </h3>
-                                <div className="flex flex-row items-center gap-1 rounded-full bg-yellow-400 px-2 py-1">
+                                <div className="flex flex-row items-center gap-1 rounded-full bg-yellow-400 px-2 py-1 flex-shrink-0">
                                     <img
                                         src={trophy}
                                         alt="Poin"
@@ -62,58 +62,40 @@ const CommentCard: React.FC<CommentCardProps> = ({
                                 </div>
                             </div>
 
-                            <p className="font-semibold text-xs text-neutral-500">
+                            <p className="font-medium text-xs text-neutral-500">
                                 {comment.exhibition_name}
                             </p>
                         </div>
 
-                        <p className=" flex-grow h-full text-xs line-clamp-3">
+                        <p className="flex-grow text-sm line-clamp-3 leading-relaxed text-neutral-700">
                             {comment.comment_text}
                         </p>
 
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                             <motion.button
-                                onClick={() =>
-                                    handleLikeCommentClick(comment.id)
-                                }
-                                //   className={`flex items-center gap-2 transition-colors ${
-                                //     likedComments.has(comment.id)
-                                //       ? 'text-blue-600'
-                                //       : 'text-gray-500 hover:text-blue-600'
-                                //   }`}
-                                className="flex items-center gap-2 transition-colors text-gray-500 hover:text-blue-600"
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleLikeCommentClick(comment.id);
+                                }}
+                                className="flex items-center gap-1.5 transition-colors text-gray-400 hover:text-red-500"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
                             >
-                                <ThumbsUp
-                                    className="w-4 h-4"
-                                    fill={
-                                        /*likedComments.has(comment.id) ? 'currentColor' : */ "none"
-                                    }
-                                />
-                                <span className="text-sm">
+                                <ThumbsUp className="w-4 h-4" />
+                                <span className="text-xs font-medium">
                                     {comment.likes_count || 0}
                                 </span>
                             </motion.button>
                             <motion.button
-                                onClick={() =>
-                                    handleDislikeCommentClick(comment.id)
-                                }
-                                //   className={`flex items-center gap-2 transition-colors ${
-                                //     dislikedComments.has(comment.id)
-                                //       ? 'text-red-600'
-                                //       : 'text-gray-500 hover:text-red-600'
-                                //   }`}
-                                className="flex items-center gap-2 transition-colors text-gray-500 hover:text-red-600"
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDislikeCommentClick(comment.id);
+                                }}
+                                className="flex items-center gap-1.5 transition-colors text-gray-400 hover:text-blue-500"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.9 }}
                             >
-                                <ThumbsDown
-                                    className="w-4 h-4"
-                                    fill={
-                                        /*dislikedComments.has(comment.id) ? 'currentColor' : */ "none"
-                                    }
-                                />
+                                <ThumbsDown className="w-4 h-4" />
                             </motion.button>
                         </div>
                     </div>

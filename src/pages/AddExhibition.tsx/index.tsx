@@ -28,7 +28,7 @@ const AddExhibition: React.FC = () => {
     const [hasSubmittedExhibitionOnce, setHasSubmittedExhibitionOnce] =
         useState(false);
     const [exhibitionSubmitted, setExhibitionSubmitted] = useState(false);
-    const [isEditingExhibition, setIsEditingExhibition] = useState(false);
+    const [_isEditingExhibition, setIsEditingExhibition] = useState(false);
 
     const [collections, setCollections] = useState<
         {

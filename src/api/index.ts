@@ -8,7 +8,6 @@ import {
     TrackVisit,
     TrendingCollection,
     VisitorAnalytics,
-    User,
     Merch,
     Level,
     AddExhibitionResponse,
@@ -138,11 +137,24 @@ export class VisitorsService extends APIService {
         );
     }
 
-    trackVisit(collectionId: string, sessionId?: string): Promise<TrackVisit> {
-        return this.post<TrackVisit>(
-            `/collections/${collectionId}/visit`,
-            sessionId ? { session_id: sessionId } : {}
-        );
+    async trackVisit(collectionId: string, sessionId?: string): Promise<TrackVisit> {
+        // Check if user is authenticated to decide which API instance to use
+        const token = localStorage.getItem("authToken");
+        
+        if (token) {
+            // Use apiAuth for authenticated users so visits are linked to their account
+            const res = await apiAuth.post(
+                `/visitors/collections/${collectionId}/visit`,
+                sessionId ? { session_id: sessionId } : {}
+            );
+            return res.data.data;
+        } else {
+            // Use regular API for anonymous users
+            return this.post<TrackVisit>(
+                `/collections/${collectionId}/visit`,
+                sessionId ? { session_id: sessionId } : {}
+            );
+        }
     }
 
     getTrending(
@@ -157,6 +169,11 @@ export class VisitorsService extends APIService {
         return this.get<VisitorAnalytics>(
             `/collections/${collectionId}/analytics`
         );
+    }
+
+    async getUserVisitedCollections(): Promise<Collection[]> {
+        const res = await apiAuth.get("/visitors/user/visited-collections");
+        return res.data.data.visitedCollections;
     }
 }
 
