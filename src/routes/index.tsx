@@ -18,7 +18,7 @@ import { motion } from "framer-motion";
 import Register from "@/pages/Register";
 import AddExhibition from "@/pages/AddExhibition.tsx";
 import ProfileExhibitionDetail from "@/pages/ProfileExhibition";
-// import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const MainLayout = () => {
     const location = useLocation();
@@ -73,11 +73,19 @@ const routes: RouteObject[] = [
             },
             {
                 path: "/profile",
-                element: <Profile />,
+                element: (
+                    <ProtectedRoute>
+                        <Profile />
+                    </ProtectedRoute>
+                ),
             },
             {
                 path: "/profile/exhibition/:id",
-                element: <ProfileExhibitionDetail />,
+                element: (
+                    <ProtectedRoute>
+                        <ProfileExhibitionDetail />
+                    </ProtectedRoute>
+                ),
             },
             {
                 path: "/login",
@@ -93,7 +101,11 @@ const routes: RouteObject[] = [
             },
             {
                 path: "/exhibition/add",
-                element: <AddExhibition />,
+                element: (
+                    <ProtectedRoute>
+                        <AddExhibition />
+                    </ProtectedRoute>
+                ),
             },
             {
                 path: "/exhibition/:id",
