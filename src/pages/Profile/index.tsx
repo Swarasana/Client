@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, Plus } from "lucide-react";
+import { ChevronDown, EllipsisVertical, LogOut, Plus } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import headerPatternVisitor from "@/assets/images/header-pattern-big.svg";
@@ -37,6 +37,9 @@ const Profile: React.FC = () => {
     const [hasMoreExhibitions, setHasMoreExhibitions] = useState(true);
     const [loadingExhibitions, setLoadingExhibitions] = useState(false);
 
+    const [showMenu, setShowMenu] = useState(false);
+
+    const menuRef = useRef<HTMLDivElement>(null);
     const levelsRef = useRef<HTMLDivElement>(null);
 
     const navigate = useNavigate();
@@ -114,6 +117,27 @@ const Profile: React.FC = () => {
 
     const handleAddExhibitionClick = () => {
         navigate("/exhibition/add");
+    };
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                menuRef.current &&
+                !menuRef.current.contains(event.target as Node)
+            ) {
+                setShowMenu(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () =>
+            document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("username");
+        localStorage.removeItem("role");
+        navigate("/");
     };
 
     if (!profile) {
@@ -214,6 +238,31 @@ const Profile: React.FC = () => {
                 )}
             </AnimatePresence>
 
+            <AnimatePresence>
+                {showMenu && (
+                    <motion.div
+                        ref={menuRef}
+                        className="absolute z-50 bg-red-500 border-2 border-white text-white right-4 top-20 mt-2 rounded-xl shadow-lg w-36 font-sf"
+                        initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                        transition={{ duration: 0.15 }}
+                    >
+                        <Button
+                            variant="ghost"
+                            className="flex w-full items-center gap-2 px-1 py-3 rounded-xl hover:bg-gray-100"
+                            onClick={() => {
+                                setShowMenu(false);
+                                handleLogout();
+                            }}
+                        >
+                            <LogOut className="w-4 h-4" />
+                            Logout
+                        </Button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <motion.div
                 className="flex flex-col top-0 w-full max-w-screen py-12 gap-0 items-start z-10 font-sf"
                 initial={{ opacity: 0 }}
@@ -229,15 +278,23 @@ const Profile: React.FC = () => {
                         />
                     </div>
                     <div className="flex flex-col gap-0 grow max-w-full min-w-0 justify-center">
-                        <p
-                            className={`font-bold text-3xl max-w-full truncate overflow-hidden text-ellipsis whitespace-nowrap ${
-                                profile.role == "visitor"
-                                    ? "text-white"
-                                    : "text-black"
-                            }`}
-                        >
-                            Halo, {profile.display_name}
-                        </p>
+                        <div className="flex flex-row w-full items-center">
+                            <p
+                                className={`flex-grow font-bold text-3xl max-w-full truncate overflow-hidden text-ellipsis whitespace-nowrap ${
+                                    profile.role == "visitor"
+                                        ? "text-white"
+                                        : "text-black"
+                                }`}
+                            >
+                                Halo, {profile.display_name}
+                            </p>
+                            <Button
+                                className="w-8 h-8 p-0 rounded-full bg-transparent hover:bg-white/20"
+                                onClick={() => setShowMenu(!showMenu)}
+                            >
+                                <EllipsisVertical className="w-full h-full" />
+                            </Button>
+                        </div>
                         <p
                             className={`text-base pb-1 ${
                                 profile.role == "visitor"
@@ -304,15 +361,17 @@ const Profile: React.FC = () => {
                                         <CommentCard
                                             key={c.id}
                                             comment={c}
-                                            className={
-                                                i === 0
-                                                    ? "ml-4"
-                                                    : i ===
-                                                      profile.comments.length -
-                                                          1
+                                            className={`${
+                                                profile.comments.length == 1
+                                                    ? "!w-[calc(100vw-2rem)]"
+                                                    : ""
+                                            } ${i === 0 ? "ml-4" : ""} ${
+                                                i ===
+                                                profile.comments.length - 1
                                                     ? "mr-4"
                                                     : ""
                                             }
+                                                    `}
                                         />
                                     ))}
                                 </div>

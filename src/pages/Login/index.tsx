@@ -26,6 +26,7 @@ const Login: React.FC = () => {
 
             localStorage.setItem("authToken", token);
             localStorage.setItem("role", response.user.role);
+            localStorage.setItem("username", response.user.username);
             navigate(`/`);
         } catch (err: any) {
             console.error(err);
