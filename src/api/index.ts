@@ -169,7 +169,7 @@ export class UserService extends APIService {
     async login(data: {
         username: string;
         password: string;
-    }): Promise<{ token: string }> {
+    }): Promise<{ token: string; user: any }> {
         const res = await api.post("/users/login", data);
         return res.data;
     }

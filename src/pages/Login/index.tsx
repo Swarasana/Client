@@ -25,7 +25,7 @@ const Login: React.FC = () => {
             const { token } = response;
 
             localStorage.setItem("authToken", token);
-            console.log(token);
+            localStorage.setItem("role", response.user.role);
             navigate(`/`);
         } catch (err: any) {
             console.error(err);

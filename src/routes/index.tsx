@@ -82,7 +82,7 @@ const routes: RouteObject[] = [
             {
                 path: "/profile/exhibition/:id",
                 element: (
-                    <ProtectedRoute>
+                    <ProtectedRoute protectRole="curator">
                         <ProfileExhibitionDetail />
                     </ProtectedRoute>
                 ),
@@ -102,7 +102,7 @@ const routes: RouteObject[] = [
             {
                 path: "/exhibition/add",
                 element: (
-                    <ProtectedRoute>
+                    <ProtectedRoute protectRole="curator">
                         <AddExhibition />
                     </ProtectedRoute>
                 ),
