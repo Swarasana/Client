@@ -19,6 +19,7 @@ import Register from "@/pages/Register";
 import AddExhibition from "@/pages/AddExhibition.tsx";
 import ProfileExhibitionDetail from "@/pages/ProfileExhibition";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import DesktopGuard from "@/components/DesktopGuard";
 
 const MainLayout = () => {
     const location = useLocation();
@@ -31,7 +32,7 @@ const MainLayout = () => {
     }, [location.pathname]);
 
     return (
-        <>
+        <DesktopGuard>
             <Navbar />
             <div
                 className={`md:ml-64 ${
@@ -54,7 +55,7 @@ const MainLayout = () => {
                 </motion.div>
             </div>
             <Footer />
-        </>
+        </DesktopGuard>
     );
 };
 
