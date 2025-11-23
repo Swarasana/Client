@@ -59,7 +59,7 @@ const ExhibitionCard: React.FC<ExhibitionCardProps> = ({
             onClick={handleClick}
         >
             <Card
-                className={`bg-white/10 backdrop-blur-sm border-0 overflow-hidden hover:bg-white/20 transition-all duration-300 cursor-pointer ${
+                className={`bg-white/10 backdrop-blur-sm border-0 overflow-hidden transition-all duration-300 cursor-pointer ${
                     isMobile ? "rounded-3xl" : ""
                 }`}
             >
@@ -104,7 +104,7 @@ const ExhibitionCard: React.FC<ExhibitionCardProps> = ({
                                 <p className="text-white/80 font-inter text-sm">
                                     {exhibition.location}
                                 </p>
-                                <div className="text-white hover:bg-white/20 text-xs px-1 py-1 rounded cursor-pointer transition-colors">
+                                <div className="text-white hover:bg-white/20 text-xs px-1 py-1 rounded-full cursor-pointer transition-colors">
                                     <ArrowUpRight className="w-5 h-5" />
                                 </div>
                             </div>

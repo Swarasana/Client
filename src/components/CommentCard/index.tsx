@@ -42,7 +42,7 @@ const CommentCard: React.FC<CommentCardProps> = ({
             onClick={handleClick}
         >
             <Card
-                className="bg-white h-full rounded-3xl p-4 hover:bg-white/20 transition-all duration-300 font-sf text-black"
+                className="bg-white h-full rounded-3xl p-4 transition-all duration-300 font-sf text-black"
                 onClick={handleClick}
             >
                 <CardContent className="p-0 flex flex-col h-full">

@@ -307,7 +307,7 @@ const ProfileCollection: React.FC<{
             onClick={() => handleCollectionClick(collection.id)}
         >
             <Card
-                className="bg-white w-full rounded-3xl hover:bg-white/20 transition-all duration-300 font-sf text-black"
+                className="bg-white w-full rounded-3xl transition-all duration-300 font-sf text-black"
                 onClick={() => {
                     handleCollectionClick(collection.id);
                 }}
