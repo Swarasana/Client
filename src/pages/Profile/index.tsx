@@ -1,12 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { AnimatePresence, motion } from "framer-motion";
-import { ChevronDown, ChevronLeft, Plus } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import headerPatternVisitor from "@/assets/images/header-pattern-big.svg";
 import headerPatternCurator from "@/assets/images/header-pattern-big-yellow.svg";
 import visitor from "@/assets/images/visitor.png";
-import curator from "@/assets/images/anton.png";
 import trophy from "@/assets/images/trophy.svg";
 import trophyYellow from "@/assets/images/trophy-yellow.svg";
 import CommentCard from "@/components/CommentCard";
