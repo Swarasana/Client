@@ -135,6 +135,7 @@ const Profile: React.FC = () => {
 
     const handleLogout = () => {
         localStorage.removeItem("authToken");
+        localStorage.removeItem("userId");
         localStorage.removeItem("username");
         localStorage.removeItem("role");
         navigate("/");

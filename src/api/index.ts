@@ -188,6 +188,11 @@ export class UserService extends APIService {
         const res = await apiAuth.get("/users/me");
         return res.data;
     }
+
+    async addPoints(points: number) {
+        const res = await apiAuth.post("/users/me/addPoints", { points });
+        return res.data;
+    }
 }
 
 // 6. Levels API

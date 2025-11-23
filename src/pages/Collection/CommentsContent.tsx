@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Comment } from "@/types";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDateTime } from "@/lib/utils";
-import { collectionsApi, commentsApi } from "@/api";
+import { collectionsApi, commentsApi, userApi } from "@/api";
 import { useToast } from "@/hooks/use-toast";
 import {
     Drawer,
@@ -99,10 +99,16 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
                 comment_text: commentData.comment,
             });
         },
-        onSuccess: () => {
+        onSuccess: async () => {
+            // add points for logged in users
+            if (authToken) {
+                await userApi.addPoints(10);
+            }
             toast({
                 title: "Komentar terkirim!",
-                description: "Terima kasih atas kontribusi Anda",
+                description: `Terima kasih atas kontribusi Anda. ${
+                    authToken ? "10 poin telah ditambahkan ke akunmu!" : ""
+                }`,
                 duration: 2000,
             });
             // Invalidate comments to refresh the list
