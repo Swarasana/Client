@@ -53,10 +53,18 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
     staleTime: 2 * 60 * 1000,
   });
 
-  // Fetch AI Summary
+  // Fetch AI Summary with fallback handling
   const { data: aiSummary, isLoading: summaryLoading } = useQuery({
     queryKey: ['collection-ai-summary', collectionId],
-    queryFn: () => collectionsApi.getAISummary(collectionId),
+    queryFn: async () => {
+      try {
+        return await collectionsApi.getAISummary(collectionId);
+      } catch (error) {
+        // Handle 404, empty responses, and other errors gracefully
+        console.log('AI Summary not available:', error);
+        return null;
+      }
+    },
     enabled: !!collectionId,
     retry: 3,
     staleTime: 10 * 60 * 1000,
@@ -126,6 +134,7 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
   
   const comments = (commentsData?.data || []) as unknown as Comment[];
   const aiSummaryText = aiSummary?.text || '';
+  const hasValidSummary = Boolean(aiSummary && aiSummaryText.trim().length > 0);
 
   // Navigation direction tracking
   const getDirection = (from: CommentStep, to: CommentStep): 'forward' | 'back' => {
@@ -204,19 +213,23 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
                     <Volume2 className="w-4 h-4 fill-gray-900" />
                   </Button>
                 </div>
-                {summaryLoading || !aiSummaryText ? (
+                {summaryLoading ? (
                   <div className="space-y-2">
                     <div className="h-4 w-full rounded bg-gradient-to-r from-teal-100 via-gray-100 to-gray-50 animate-pulse" />
                     <div className="h-4 w-full rounded bg-gradient-to-r from-teal-100 via-gray-100 to-gray-50 animate-pulse" />
                     <div className="h-4 w-3/4 rounded bg-gradient-to-r from-teal-100 via-gray-100 to-gray-50 animate-pulse" />
                   </div>
-                ) : (
+                ) : hasValidSummary ? (
                   <>
                     <p className="text-gray-700 text-base font-sf font-light line-clamp-3">
                       {aiSummaryText}
                     </p>
                     <span className="text-gray-500 text-sm">...</span>
                   </>
+                ) : (
+                  <p className="text-gray-500 text-base font-sf font-light italic">
+                    Ringkasan AI belum tersedia untuk koleksi ini.
+                  </p>
                 )}
               </div>
             </div>
@@ -229,6 +242,7 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
               direction="forward"
               aiSummaryText={aiSummaryText}
               summaryLoading={summaryLoading}
+              hasValidSummary={hasValidSummary}
               comments={comments}
               onLikeComment={handleLikeCommentClick}
               onDislikeComment={handleDislikeComment}
@@ -259,6 +273,7 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
               direction={getDirection(previousStep, currentStep)}
               aiSummaryText={aiSummaryText}
               summaryLoading={summaryLoading}
+              hasValidSummary={hasValidSummary}
               comments={comments}
               onLikeComment={handleLikeCommentClick}
               onDislikeComment={handleDislikeComment}
@@ -286,6 +301,7 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
   direction: 'forward' | 'back';
   aiSummaryText: string;
   summaryLoading: boolean;
+  hasValidSummary: boolean;
   comments: Comment[];
   onLikeComment: (id: string) => void;
   onDislikeComment: (id: string) => void;
@@ -303,7 +319,8 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
   previousStep: _,
   direction,
   aiSummaryText, 
-  summaryLoading, 
+  summaryLoading,
+  hasValidSummary,
   comments, 
   onLikeComment,
   onDislikeComment,
@@ -359,6 +376,7 @@ const DrawerContentRenderer = React.forwardRef<HTMLDivElement, {
           <CommentsList 
             aiSummaryText={aiSummaryText}
             summaryLoading={summaryLoading}
+            hasValidSummary={hasValidSummary}
             comments={comments}
             onLikeComment={onLikeComment}
             onDislikeComment={onDislikeComment}
@@ -581,13 +599,14 @@ DrawerContentRenderer.displayName = 'DrawerContentRenderer';
 const CommentsList: React.FC<{
   aiSummaryText: string;
   summaryLoading: boolean;
+  hasValidSummary: boolean;
   comments: Comment[];
   onLikeComment: (id: string) => void;
   onDislikeComment: (id: string) => void;
   likedComments: Set<string>;
   dislikedComments: Set<string>;
   onContribute: () => void;
-}> = ({ aiSummaryText, summaryLoading, comments, onLikeComment, onDislikeComment, likedComments, dislikedComments, onContribute }) => (
+}> = ({ aiSummaryText, summaryLoading, hasValidSummary, comments, onLikeComment, onDislikeComment, likedComments, dislikedComments, onContribute }) => (
   <div className="flex flex-col h-full">
     <div className="flex-1 overflow-y-auto p-6 pb-0" style={{ minHeight: 0 }}>
       {/* AI Summary */}
@@ -614,7 +633,7 @@ const CommentsList: React.FC<{
           </Button>
         </motion.div>
       </div>
-      {summaryLoading || !aiSummaryText ? (
+      {summaryLoading ? (
         <div className="space-y-3">
           <Skeleton className="h-4 w-full" />
           <Skeleton className="h-4 w-full" />
@@ -622,7 +641,7 @@ const CommentsList: React.FC<{
           <Skeleton className="h-4 w-4/5" />
           <Skeleton className="h-4 w-3/5" />
         </div>
-      ) : (
+      ) : hasValidSummary ? (
         <motion.p 
           className="text-gray-700 text-base font-sf font-light"
           initial={{ opacity: 0 }}
@@ -630,6 +649,15 @@ const CommentsList: React.FC<{
           transition={{ duration: 0.4, delay: 0.1 }}
         >
           {aiSummaryText}
+        </motion.p>
+      ) : (
+        <motion.p 
+          className="text-gray-500 text-base font-sf font-light italic"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          Ringkasan AI belum tersedia untuk koleksi ini.
         </motion.p>
       )}
     </motion.div>
