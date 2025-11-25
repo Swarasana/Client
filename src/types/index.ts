@@ -86,6 +86,7 @@ export interface Collection {
     artist_name: string;
     artist_explanation: string;
     ai_summary_text: string;
+    visitor_count: number;
     likes_count: number;
     created_at: string;
     updated_at: string;

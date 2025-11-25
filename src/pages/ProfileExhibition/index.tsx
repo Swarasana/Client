@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
     ChevronLeft,
+    Eye,
     Heart,
     MessageSquare,
     Pen,
@@ -342,10 +343,15 @@ const ProfileCollection: React.FC<{
                         </p>
                         <div className="flex flex-row gap-2 items-center">
                             <div className="flex-grow"></div>
-                            <MessageSquare className="w-5 h-5 fill-black" />
+                            <MessageSquare
+                                className="w-5 h-5"
+                                color="#696969"
+                            />
                             <p>0</p>
-                            <Heart className="w-5 h-5 fill-black ml-2" />
+                            <Heart className="w-5 h-5 ml-2" color="#696969" />
                             <p>{collection.likes_count}</p>
+                            <Eye className="w-5 h-5 ml-1" color="#696969" />
+                            <p>{collection.visitor_count}</p>
                         </div>
                     </div>
                 </CardContent>
