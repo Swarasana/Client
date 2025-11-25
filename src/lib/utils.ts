@@ -43,3 +43,26 @@ export const logout = () => {
   // Force redirect to login page
   window.location.href = "/login";
 };
+
+// Mobile device detection utilities
+export const isMobileDevice = (): boolean => {
+  return window.innerWidth < 768;
+};
+
+export const isAndroid = (): boolean => {
+  return /Android/i.test(navigator.userAgent);
+};
+
+export const isIOS = (): boolean => {
+  return /iPad|iPhone|iPod/i.test(navigator.userAgent);
+};
+
+export const isPWA = (): boolean => {
+  return window.matchMedia('(display-mode: standalone)').matches;
+};
+
+export const isMobileBrowser = (): boolean => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
+export type MobileDeviceType = "android" | "ios" | "desktop" | "pwa";

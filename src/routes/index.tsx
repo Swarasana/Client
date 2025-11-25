@@ -20,6 +20,7 @@ import AddExhibition from "@/pages/AddExhibition.tsx";
 import ProfileExhibitionDetail from "@/pages/ProfileExhibition";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import DesktopGuard from "@/components/DesktopGuard";
+import MobileGuard from "@/components/MobileGuard";
 
 const MainLayout = () => {
     const location = useLocation();
@@ -33,28 +34,30 @@ const MainLayout = () => {
 
     return (
         <DesktopGuard>
-            <Navbar />
-            <div
-                className={`md:ml-64 ${
-                    showMobileNavbar ? "pb-16" : "pb-0"
-                } md:pb-0 min-h-screen bg-blue1`}
-            >
-                <motion.div
-                    key={location.pathname}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 1.05 }}
-                    transition={{
-                        duration: 0.2,
-                        ease: "easeInOut",
-                        type: "tween",
-                    }}
-                    className="w-full"
+            <MobileGuard>
+                <Navbar />
+                <div
+                    className={`md:ml-64 ${
+                        showMobileNavbar ? "pb-16" : "pb-0"
+                    } md:pb-0 min-h-screen bg-blue1`}
                 >
-                    <Outlet />
-                </motion.div>
-            </div>
-            <Footer />
+                    <motion.div
+                        key={location.pathname}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.05 }}
+                        transition={{
+                            duration: 0.2,
+                            ease: "easeInOut",
+                            type: "tween",
+                        }}
+                        className="w-full"
+                    >
+                        <Outlet />
+                    </motion.div>
+                </div>
+                <Footer />
+            </MobileGuard>
         </DesktopGuard>
     );
 };
