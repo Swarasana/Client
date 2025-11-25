@@ -100,12 +100,6 @@ function App() {
     };
   }, []);
 
-  // Handle global error retry
-  const handleGlobalRetry = () => {
-    setGlobalError(null);
-    queryClient.refetchQueries();
-  };
-
   // Show global error state if there's an error
   if (globalError) {
     const errorInfo = categorizeError(globalError);
