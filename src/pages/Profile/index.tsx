@@ -58,15 +58,45 @@ const Profile: React.FC = () => {
     }, [profile]);
 
     async function load() {
-        const p = await userApi.getProfile();
-        setProfile(p.user);
+        try {
+            const p = await userApi.getProfile();
+            
+            let currentUser = p.user;
+            
+            // Check if user data is null and retry once
+            if (!currentUser) {
+                console.warn('Profile returned null user, retrying...');
+                const retryResult = await userApi.getProfile();
+                if (!retryResult.user) {
+                    const unauthorizedError: any = new Error("User session expired after retry");
+                    unauthorizedError.response = { status: 401 };
+                    unauthorizedError.isAuthError = true;
+                    throw unauthorizedError;
+                }
+                currentUser = retryResult.user;
+            }
+            
+            setProfile(currentUser);
 
-        if (p.user.role == "visitor") {
-            const levelsList = await levelsApi.getLevels();
-            setLevels(levelsList);
+            if (currentUser?.role == "visitor") {
+                const levelsList = await levelsApi.getLevels();
+                setLevels(levelsList);
 
-            const merchList = await merchApi.getMerch();
-            setMerch(merchList);
+                const merchList = await merchApi.getMerch();
+                setMerch(merchList);
+            }
+        } catch (error: any) {
+            console.error('Profile load error:', error);
+            
+            // Handle 401/session expired errors directly
+            if (error.response?.status === 401 || error.message?.includes('session expired') || error.isAuthError) {
+                console.warn("Session expired, redirecting to login...");
+                logout();
+                return;
+            }
+            
+            // Let other errors bubble up to global error handling
+            throw error;
         }
     }
 

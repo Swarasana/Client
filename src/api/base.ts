@@ -78,7 +78,13 @@ export class APIService {
 
         const response: AxiosResponse<ApiResponse<T>> = await this.api.get<
             ApiResponse<T>
-        >(finalUrl);
+        >(finalUrl, {
+            headers: {
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            }
+        });
 
         // Handle error response
         if (!response.data.success) {

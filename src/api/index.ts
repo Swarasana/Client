@@ -202,7 +202,21 @@ export class UserService extends APIService {
     }
 
     async getProfile() {
-        const res = await apiAuth.get("/users/me");
+        const res = await apiAuth.get("/users/me", {
+            headers: {
+                'Cache-Control': 'no-cache',
+                'Pragma': 'no-cache'
+            }
+        });
+        
+        // Handle case where backend returns success: true but user: null
+        if (res.data.success && res.data.user === null) {
+            const unauthorizedError: any = new Error("User session expired");
+            unauthorizedError.response = { status: 401 };
+            unauthorizedError.isAuthError = true;
+            throw unauthorizedError;
+        }
+        
         return res.data;
     }
 
