@@ -171,16 +171,7 @@ const ProfileExhibitionDetail: React.FC = () => {
             </div>
 
             {/* Collections Section */}
-            <div className="flex flex-col flex-1 gap-4 px-4 pt-8 pb-20">
-                <motion.h2
-                    className="text-lg font-sf font-bold text-white"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.7 }}
-                >
-                    Total Pengunjung: 123
-                </motion.h2>
-
+            <div className="flex flex-col flex-1 gap-4 px-4 pt-4 pb-20">
                 {collectionsLoading ? (
                     <div className="flex flex-col gap-4 w-full">
                         {Array.from({ length: 3 }).map((_, index) => (
@@ -193,7 +184,7 @@ const ProfileExhibitionDetail: React.FC = () => {
                 ) : collections.length > 0 ? (
                     <>
                         <motion.h2
-                            className="text-lg font-sf font-bold text-white mt-4"
+                            className="text-lg font-sf font-bold text-white"
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, delay: 0.7 }}

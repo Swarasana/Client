@@ -562,28 +562,28 @@ const AddExhibition: React.FC = () => {
                                                 : "Simpan"}
                                         </Button>
                                     </div>
-                                    {col.submittedOnce && (
-                                        <div className="flex flex-row w-full">
-                                            <div className="flex flex-row flex-grow"></div>
-                                            <Button
-                                                onClick={() =>
-                                                    downloadQR(
-                                                        col.qr_code_url,
-                                                        `qr-${
-                                                            collections[index]
-                                                                .name ||
-                                                            "collection"
-                                                        }.png`
-                                                    )
-                                                }
-                                                className="flex gap-1 items-center justify-center bg-yellow-400 hover:bg-yellow-500 font-sf font-semibold text-gray-900 text-sm rounded-full py-3 px-4"
-                                            >
-                                                <QrCode className="w-6 h-6" />
-                                                Unduh Kode QR
-                                            </Button>
-                                        </div>
-                                    )}
                                 </form>
+                                {col.submittedOnce && (
+                                    <div className="flex flex-row w-full mt-3">
+                                        <div className="flex flex-row flex-grow"></div>
+                                        <Button
+                                            onClick={() =>
+                                                downloadQR(
+                                                    col.qr_code_url,
+                                                    `qr-${
+                                                        collections[index]
+                                                            .name ||
+                                                        "collection"
+                                                    }.png`
+                                                )
+                                            }
+                                            className="flex gap-1 items-center justify-center bg-yellow-400 hover:bg-yellow-500 font-sf font-semibold text-gray-900 text-sm rounded-full py-3 px-4"
+                                        >
+                                            <QrCode className="w-6 h-6" />
+                                            Unduh Kode QR
+                                        </Button>
+                                    </div>
+                                )}
                             </motion.div>
                         ))}
 
