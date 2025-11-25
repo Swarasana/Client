@@ -59,16 +59,13 @@ const Profile: React.FC = () => {
     async function load() {
         const p = await userApi.getProfile();
         setProfile(p.user);
-        console.log(p.user);
 
         if (p.user.role == "visitor") {
             const levelsList = await levelsApi.getLevels();
             setLevels(levelsList);
-            console.log(levelsList);
 
             const merchList = await merchApi.getMerch();
             setMerch(merchList);
-            console.log(merchList);
         }
     }
 
@@ -128,7 +125,6 @@ const Profile: React.FC = () => {
     }, []);
 
     const handleLevelsClick = () => {
-        console.log("clicked");
         if (levelsRef.current) {
             const rect = levelsRef.current.getBoundingClientRect();
             setLevelsOverlayPos({
@@ -278,39 +274,54 @@ const Profile: React.FC = () => {
                                     key={level.id}
                                     className="flex flex-row w-full gap-2 items-center"
                                 >
-                                    {!levelsAvatarLoaded && (
-                                        <Skeleton className="w-14 h-14" />
+                                    {!levelsAvatarLoaded ? (
+                                        <Skeleton className="w-14 h-14 rounded bg-gray-200" />
+                                    ) : (
+                                        <img
+                                            src={level.avatar_url}
+                                            alt=""
+                                            className="w-14 h-14"
+                                            onLoad={() =>
+                                                setLevelsAvatarLoaded(true)
+                                            }
+                                        />
                                     )}
-                                    <img
-                                        src={level.avatar_url}
-                                        alt=""
-                                        className="w-14 h-14"
-                                        onLoad={() =>
-                                            setLevelsAvatarLoaded(true)
-                                        }
-                                    />
-                                    <div className="flex flex-col gap-0">
-                                        <div className="flex flex-row">
-                                            <p className="flex-grow font-semibold text-[#054FB9]/45 text-xs">
-                                                Level {level.level_number}
-                                            </p>
-                                            <div className="flex flex-row items-center gap-1">
-                                                <img
-                                                    src={trophyYellow}
-                                                    alt="Poin"
-                                                    className="w-3 h-3"
-                                                />
-                                                <p className="font-bold text-xs text-yellow-400">
-                                                    {level.minimum_points}
+                                    <div className="flex flex-col gap-0 flex-1">
+                                        {!levelsAvatarLoaded ? (
+                                            <>
+                                                <div className="flex flex-row justify-between mb-1">
+                                                    <Skeleton className="h-3 w-16 bg-gray-200 rounded" />
+                                                    <Skeleton className="h-3 w-12 bg-gray-200 rounded" />
+                                                </div>
+                                                <Skeleton className="h-4 w-24 bg-gray-200 rounded mb-1" />
+                                                <Skeleton className="h-3 w-full bg-gray-200 rounded" />
+                                                <Skeleton className="h-3 w-3/4 bg-gray-200 rounded mt-0.5" />
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="flex flex-row">
+                                                    <p className="flex-grow font-semibold text-[#054FB9]/45 text-xs">
+                                                        Level {level.level_number}
+                                                    </p>
+                                                    <div className="flex flex-row items-center gap-1">
+                                                        <img
+                                                            src={trophyYellow}
+                                                            alt="Poin"
+                                                            className="w-3 h-3"
+                                                        />
+                                                        <p className="font-bold text-xs text-yellow-400">
+                                                            {level.minimum_points}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <p className="font-bold text-blue1 text-sm">
+                                                    "{level.level_name}"
                                                 </p>
-                                            </div>
-                                        </div>
-                                        <p className="font-bold text-blue1 text-sm">
-                                            "{level.level_name}"
-                                        </p>
-                                        <p className="text-[10px]">
-                                            {level.desc}
-                                        </p>
+                                                <p className="text-[10px]">
+                                                    {level.desc}
+                                                </p>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             ))}

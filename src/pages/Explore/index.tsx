@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { motion, PanInfo } from "framer-motion";
@@ -21,6 +21,7 @@ const Explore: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState("");
     const [currentSlide, setCurrentSlide] = useState(0);
     const autoScrollRef = useRef<number | null>(null);
+    const containerRef = useRef<HTMLDivElement>(null);
 
     // Fetch exhibitions data
     const { data: exhibitionsData, isLoading } = useQuery({
@@ -32,12 +33,28 @@ const Explore: React.FC = () => {
 
     const exhibitions = Array.isArray(exhibitionsData?.data) ? exhibitionsData.data : [];
 
-    // Audio characters data
-    const audioCharacters = [
+    // Audio characters data - memoized
+    const audioCharacters = useMemo(() => [
         { name: "Anton", avatar: anton, color: "bg-[#FFD942]" },
         { name: "Dede", avatar: dede, color: "bg-[#78C49E]" },
         { name: "Eva", avatar: eva, color: "bg-[#FFEBB2]" }
-    ] as const;
+    ] as const, []);
+
+    // Memoized calculations for carousel
+    const carouselConfig = useMemo(() => {
+        const CARD_WIDTH = 207;
+        const CARD_GAP = 16;
+        const SLIDE_WIDTH = CARD_WIDTH + CARD_GAP;
+        const totalWidth = exhibitions.length * SLIDE_WIDTH - CARD_GAP;
+        
+        return {
+            CARD_WIDTH,
+            CARD_GAP,
+            SLIDE_WIDTH,
+            totalWidth,
+            maxOffset: -(exhibitions.length - 1) * SLIDE_WIDTH
+        };
+    }, [exhibitions.length]);
 
     // Auto-scroll functionality
     useEffect(() => {
@@ -59,38 +76,47 @@ const Explore: React.FC = () => {
     }, [currentSlide, exhibitions.length]);
 
 
-    const handleDragEnd = (_event: unknown, info: PanInfo) => {
+    const handleDragEnd = useCallback((_event: unknown, info: PanInfo) => {
+        // Clear auto-scroll when user manually drags
+        if (autoScrollRef.current) {
+            clearTimeout(autoScrollRef.current);
+            autoScrollRef.current = null;
+        }
+
         const velocity = Math.abs(info.velocity.x);
         const offset = Math.abs(info.offset.x);
         
-        // Calculate how many slides to skip based on swipe distance and velocity
-        let slidesToMove = 1;
+        // Simplified slide calculation for better performance
+        const threshold = 80;
+        const velocityThreshold = 300;
         
-        if (offset > 150 || velocity > 500) {
-            slidesToMove = Math.ceil(offset / 150) + Math.floor(velocity / 1000);
-            slidesToMove = Math.min(slidesToMove, 3); // Max 3 slides per swipe
+        if (offset > threshold || velocity > velocityThreshold) {
+            if (info.offset.x > 0) {
+                // Swipe right (previous)
+                setCurrentSlide((prev) => prev > 0 ? prev - 1 : exhibitions.length - 1);
+            } else {
+                // Swipe left (next)  
+                setCurrentSlide((prev) => (prev + 1) % exhibitions.length);
+            }
         }
-        
-        if (info.offset.x > 50) {
-            // Swipe right (previous)
-            setCurrentSlide((prev) => {
-                const newSlide = prev - slidesToMove;
-                return newSlide < 0 ? exhibitions.length + newSlide : newSlide;
-            });
-        } else if (info.offset.x < -50) {
-            // Swipe left (next)
-            setCurrentSlide((prev) => (prev + slidesToMove) % exhibitions.length);
-        }
-    };
+    }, [exhibitions.length]);
 
-    const handleSearchSubmit = (e: React.FormEvent) => {
+    const handleSearchSubmit = useCallback((e: React.FormEvent) => {
         e.preventDefault();
         if (searchQuery.trim()) {
             navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
         }
-    };
+    }, [searchQuery, navigate]);
 
-    const SkeletonCard = () => (
+    const handleSlideChange = useCallback((index: number) => {
+        if (autoScrollRef.current) {
+            clearTimeout(autoScrollRef.current);
+            autoScrollRef.current = null;
+        }
+        setCurrentSlide(index);
+    }, []);
+
+    const SkeletonCard = useMemo(() => (
         <Card className="bg-white/10 backdrop-blur-sm border-0 overflow-hidden">
             <CardContent className="p-0">
                 <div className="w-[207px] h-[256px] relative">
@@ -105,7 +131,7 @@ const Explore: React.FC = () => {
                 </div>
             </CardContent>
         </Card>
-    );
+    ), []);
 
     return (
         <main className="flex flex-col w-full min-h-screen bg-gradient-to-b from-blue1 via-blue1 to-blue2 text-white relative overflow-hidden">
@@ -174,7 +200,7 @@ const Explore: React.FC = () => {
                                 <div className="flex gap-4">
                                     {Array.from({ length: 3 }).map((_, index) => (
                                         <div key={index} className="min-w-[207px] flex-shrink-0">
-                                            <SkeletonCard />
+                                            {SkeletonCard}
                                         </div>
                                     ))}
                                 </div>
@@ -186,22 +212,30 @@ const Explore: React.FC = () => {
                                 </div>
                             </div>
                         ) : exhibitions.length > 0 ? (
-                            <div className="overflow-hidden">
+                            <div className="overflow-hidden" ref={containerRef}>
                                 <motion.div
                                     className="flex gap-4 cursor-grab active:cursor-grabbing"
                                     drag="x"
                                     dragConstraints={{
-                                        left: -(exhibitions.length - 1) * 215 - (exhibitions.length > 1 ? 16 : 0),
+                                        left: carouselConfig.maxOffset,
                                         right: 0
                                     }}
-                                    dragElastic={0.2}
+                                    dragElastic={0.15}
+                                    dragTransition={{ bounceStiffness: 300, bounceDamping: 40 }}
                                     onDragEnd={handleDragEnd}
                                     animate={{ 
-                                        x: currentSlide === exhibitions.length - 1 
-                                            ? -(currentSlide * 215 - (window.innerWidth - 207 - 32)) // Align last card to right
-                                            : -currentSlide * 215
+                                        x: -currentSlide * carouselConfig.SLIDE_WIDTH
                                     }}
-                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                    transition={{ 
+                                        type: "spring", 
+                                        stiffness: 400, 
+                                        damping: 40,
+                                        mass: 0.8
+                                    }}
+                                    style={{ 
+                                        width: carouselConfig.totalWidth,
+                                        willChange: 'transform'
+                                    }}
                                 >
                                     {exhibitions.map((exhibition, index) => (
                                         <ExhibitionCard
@@ -220,10 +254,10 @@ const Explore: React.FC = () => {
                                     {exhibitions.map((_, index) => (
                                         <button
                                             key={index}
-                                            className={`w-2 h-2 rounded-full transition-all ${
+                                            className={`w-2 h-2 rounded-full transition-colors duration-200 ${
                                                 index === currentSlide ? 'bg-yellow-400' : 'bg-white/30'
                                             }`}
-                                            onClick={() => setCurrentSlide(index)}
+                                            onClick={() => handleSlideChange(index)}
                                         />
                                     ))}
                                 </div>

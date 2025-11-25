@@ -104,13 +104,10 @@ const AddExhibition: React.FC = () => {
                     exhibitionId,
                     payload
                 );
-                console.log(response);
             }
 
             setIsEditingExhibition(false);
             setExhibitionSubmitted(true);
-
-            console.log("exhibition id", response.id);
         } catch (err: any) {
             setError(err.message || "Terjadi kesalahan");
         } finally {
