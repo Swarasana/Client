@@ -88,7 +88,7 @@ const MobileGuard: React.FC<MobileGuardProps> = ({ children }) => {
   }
 
   return (
-    <div className="relative">
+    <div className="relative overflow-x-hidden">
       {/* Render children hidden */}
       <div className="opacity-0 pointer-events-none absolute">
         {children}
@@ -167,7 +167,7 @@ const AndroidTutorial: React.FC = () => {
           <img
             src="/title.png"
             alt="Swarasana Logo"
-            className="h-24 w-auto max-w-xs object-contain"
+            className="h-32 w-auto max-w-xs object-contain"
           />
         </motion.div>
         <h1 className="text-2xl font-bold mb-2">
@@ -260,7 +260,7 @@ const IosTutorial: React.FC = () => {
           <img
             src="/title.png"
             alt="Swarasana Logo"
-            className="h-24 w-auto max-w-xs object-contain"
+            className="h-32 w-auto max-w-xs object-contain"
           />
         </motion.div>
         <h1 className="text-2xl font-bold mb-2">
