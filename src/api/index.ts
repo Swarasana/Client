@@ -234,6 +234,28 @@ export class MerchService extends APIService {
     }
 }
 
+// 8. TTS API
+export class TTSService extends APIService {
+    constructor(apiInstance: AxiosInstance) {
+        super(apiInstance, "ai");
+    }
+
+    async generateSpeech(text: string, lang: string = "id-ID", format: string = "ogg"): Promise<Blob> {
+        const formData = new FormData();
+        formData.append('text', text);
+        formData.append('lang', lang);
+        formData.append('format_', format);
+
+        const res = await apiAuth.post("/ai/tts", formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+            responseType: 'blob'
+        });
+        return res.data;
+    }
+}
+
 // Initialize and Export API Objects
 export const collectionsApi = new CollectionsService(api);
 export const commentsApi = new CommentsService(api);
@@ -242,3 +264,4 @@ export const visitorsApi = new VisitorsService(api);
 export const userApi = new UserService(api);
 export const levelsApi = new LevelService(api);
 export const merchApi = new MerchService(api);
+export const ttsApi = new TTSService(api);

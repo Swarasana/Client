@@ -15,6 +15,7 @@ import MerchCard from "@/components/MerchCard";
 import { ExhibitionCard } from "@/components";
 import { Skeleton } from "@/components/ui/skeleton";
 import CollectionCard from "@/components/CollectionCard";
+import { logout } from "@/lib/utils";
 
 const Profile: React.FC = () => {
     const [profile, setProfile] = useState<ProfileType | null>(null);
@@ -31,7 +32,7 @@ const Profile: React.FC = () => {
         top: 0,
         right: 0,
     });
-    const [levelsAvatarLoaded, setLevelsAvatarLoaded] = useState(false);
+    const [levelsAvatarLoaded, setLevelsAvatarLoaded] = useState<Set<string>>(new Set());
 
     const [exhibitions, setExhibitions] = useState<Exhibition[]>([]);
     const [exhibitionsCursor, setExhibitionsCursor] = useState<string | null>(
@@ -154,11 +155,7 @@ const Profile: React.FC = () => {
     }, []);
 
     const handleLogout = () => {
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("userId");
-        localStorage.removeItem("username");
-        localStorage.removeItem("role");
-        navigate("/");
+        logout();
     };
 
     if (!profile) {
@@ -274,20 +271,21 @@ const Profile: React.FC = () => {
                                     key={level.id}
                                     className="flex flex-row w-full gap-2 items-center"
                                 >
-                                    {!levelsAvatarLoaded ? (
-                                        <Skeleton className="w-14 h-14 rounded bg-gray-200" />
-                                    ) : (
+                                    <div className="relative w-14 h-14">
+                                        {!levelsAvatarLoaded.has(level.id) && (
+                                            <Skeleton className="absolute inset-0 w-14 h-14 rounded bg-gray-200" />
+                                        )}
                                         <img
                                             src={level.avatar_url}
                                             alt=""
                                             className="w-14 h-14"
                                             onLoad={() =>
-                                                setLevelsAvatarLoaded(true)
+                                                setLevelsAvatarLoaded(prev => new Set(prev).add(level.id))
                                             }
                                         />
-                                    )}
+                                    </div>
                                     <div className="flex flex-col gap-0 flex-1">
-                                        {!levelsAvatarLoaded ? (
+                                        {!levelsAvatarLoaded.has(level.id) ? (
                                             <>
                                                 <div className="flex flex-row justify-between mb-1">
                                                     <Skeleton className="h-3 w-16 bg-gray-200 rounded" />

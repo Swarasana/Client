@@ -33,3 +33,13 @@ export const formatDateTime = (dateString: string) => {
     });
   }
 };
+
+// Auth utility functions
+export const logout = () => {
+  localStorage.removeItem("authToken");
+  localStorage.removeItem("userId");
+  localStorage.removeItem("username");
+  localStorage.removeItem("role");
+  // Force redirect to login page
+  window.location.href = "/login";
+};
