@@ -66,3 +66,94 @@ export const isMobileBrowser = (): boolean => {
 };
 
 export type MobileDeviceType = "android" | "ios" | "desktop" | "pwa";
+
+// Error handling utilities
+export interface ErrorInfo {
+  type: "network" | "server" | "not-found" | "forbidden" | "unauthorized" | "generic";
+  title: string;
+  message: string;
+  showRetry: boolean;
+  retryAction?: () => void;
+}
+
+export const categorizeError = (error: any): ErrorInfo => {
+  // Network/Connection errors
+  if (!navigator.onLine) {
+    return {
+      type: "network",
+      title: "Tidak Ada Koneksi Internet",
+      message: "Periksa koneksi internet Anda dan coba lagi",
+      showRetry: true
+    };
+  }
+
+  // Axios/HTTP errors
+  if (error?.response) {
+    const status = error.response.status;
+    
+    switch (status) {
+      case 404:
+        return {
+          type: "not-found", 
+          title: "Halaman Tidak Ditemukan",
+          message: "Halaman atau data yang Anda cari tidak ditemukan. Periksa URL atau kembali ke halaman utama.",
+          showRetry: true
+        };
+      
+      case 401:
+        return {
+          type: "unauthorized",
+          title: "Sesi Anda Berakhir", 
+          message: "Silakan login kembali untuk melanjutkan",
+          showRetry: true,
+          retryAction: () => logout()
+        };
+      
+      case 403:
+        return {
+          type: "forbidden",
+          title: "Akses Ditolak",
+          message: "Anda tidak memiliki izin untuk mengakses halaman ini",
+          showRetry: true
+        };
+      
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        return {
+          type: "server",
+          title: "Server Sedang Bermasalah",
+          message: "Terjadi masalah pada server kami. Silakan coba lagi dalam beberapa menit.",
+          showRetry: true
+        };
+      
+      default:
+        return {
+          type: "server", 
+          title: "Terjadi Kesalahan Server",
+          message: "Server mengalami masalah. Silakan coba lagi atau hubungi support jika masalah berlanjut.",
+          showRetry: true
+        };
+    }
+  }
+
+  // Network request failed (no response)
+  if (error?.request) {
+    return {
+      type: "network",
+      title: "Gagal Terhubung ke Server", 
+      message: "Tidak dapat terhubung ke server. Periksa koneksi internet Anda atau coba lagi nanti.",
+      showRetry: true
+    };
+  }
+
+  // Generic JavaScript errors
+  return {
+    type: "generic",
+    title: "Terjadi Kesalahan Aplikasi",
+    message: "Aplikasi mengalami kesalahan yang tidak terduga. Silakan muat ulang halaman.",
+    showRetry: true,
+    retryAction: () => window.location.reload()
+  };
+};

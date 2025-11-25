@@ -1,12 +1,12 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { RefreshCw, AlertTriangle, WifiOff } from "lucide-react";
+import { RefreshCw, AlertTriangle, WifiOff, FileX, Shield, LogIn, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ErrorStateProps {
   title?: string;
   message?: string;
-  type?: "network" | "server" | "generic" | "not-found";
+  type?: "network" | "server" | "generic" | "not-found" | "forbidden" | "unauthorized";
   onRetry?: () => void;
   showRetry?: boolean;
   fullPage?: boolean;
@@ -28,30 +28,54 @@ const ErrorState: React.FC<ErrorStateProps> = ({
         return {
           icon: <WifiOff className="w-16 h-16 text-red-400" />,
           defaultTitle: "Koneksi Bermasalah",
-          defaultMessage: "Periksa koneksi internet Anda dan coba lagi"
+          defaultMessage: "Periksa koneksi internet Anda dan coba lagi",
+          actionIcon: <RefreshCw className="w-4 h-4" />,
+          actionText: "Coba Lagi"
         };
       case "server":
         return {
           icon: <AlertTriangle className="w-16 h-16 text-yellow-400" />,
           defaultTitle: "Server Sedang Bermasalah",
-          defaultMessage: "Terjadi masalah pada server kami. Silakan coba lagi nanti"
+          defaultMessage: "Terjadi masalah pada server kami. Silakan coba lagi nanti",
+          actionIcon: <RefreshCw className="w-4 h-4" />,
+          actionText: "Coba Lagi"
         };
       case "not-found":
         return {
-          icon: <AlertTriangle className="w-16 h-16 text-blue-400" />,
-          defaultTitle: "Data Tidak Ditemukan",
-          defaultMessage: "Data yang Anda cari tidak ditemukan"
+          icon: <FileX className="w-16 h-16 text-blue-400" />,
+          defaultTitle: "Halaman Tidak Ditemukan",
+          defaultMessage: "Halaman yang Anda cari tidak ditemukan",
+          actionIcon: <Home className="w-4 h-4" />,
+          actionText: "Kembali ke Beranda"
+        };
+      case "forbidden":
+        return {
+          icon: <Shield className="w-16 h-16 text-orange-400" />,
+          defaultTitle: "Akses Ditolak",
+          defaultMessage: "Anda tidak memiliki izin untuk mengakses halaman ini",
+          actionIcon: <Home className="w-4 h-4" />,
+          actionText: "Kembali ke Beranda"
+        };
+      case "unauthorized":
+        return {
+          icon: <LogIn className="w-16 h-16 text-purple-400" />,
+          defaultTitle: "Sesi Berakhir",
+          defaultMessage: "Sesi login Anda telah berakhir. Silakan login kembali",
+          actionIcon: <LogIn className="w-4 h-4" />,
+          actionText: "Login Kembali"
         };
       default:
         return {
           icon: <AlertTriangle className="w-16 h-16 text-red-400" />,
           defaultTitle: "Terjadi Kesalahan",
-          defaultMessage: "Mohon maaf, terjadi kesalahan yang tidak terduga"
+          defaultMessage: "Mohon maaf, terjadi kesalahan yang tidak terduga",
+          actionIcon: <RefreshCw className="w-4 h-4" />,
+          actionText: "Muat Ulang"
         };
     }
   };
 
-  const { icon, defaultTitle, defaultMessage } = getErrorContent();
+  const { icon, defaultTitle, defaultMessage, actionIcon, actionText } = getErrorContent();
 
   const containerClasses = fullPage
     ? "flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-blue1 via-blue1 to-blue2 text-white p-4"
@@ -108,8 +132,8 @@ const ErrorState: React.FC<ErrorStateProps> = ({
               onClick={onRetry}
               className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-medium px-6 py-2 rounded-full flex items-center gap-2 transition-all duration-200 hover:scale-105"
             >
-              <RefreshCw className="w-4 h-4" />
-              Coba Lagi
+              {actionIcon}
+              {actionText}
             </Button>
           </motion.div>
         )}

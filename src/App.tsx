@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
 import router from "./routes";
 import { SplashScreen, GlobalErrorBoundary, ErrorState } from "./components";
+import { categorizeError } from "./lib/utils";
 import { PWAUpdatePrompt } from "./components/PWAUpdatePrompt";
 
 import { ToastContainer } from 'react-toastify';
@@ -107,22 +108,29 @@ function App() {
 
   // Show global error state if there's an error
   if (globalError) {
-    // Determine error type based on error message
-    let errorType: "network" | "server" | "generic" = "generic";
-    const errorMessage = (globalError as any)?.message || String(globalError);
+    const errorInfo = categorizeError(globalError);
     
-    if (errorMessage.toLowerCase().includes('network') || errorMessage.toLowerCase().includes('fetch')) {
-      errorType = "network";
-    } else if (errorMessage.toLowerCase().includes('server') || errorMessage.toLowerCase().includes('500')) {
-      errorType = "server";
-    }
+    const handleRetry = () => {
+      setGlobalError(null);
+      
+      if (errorInfo.retryAction) {
+        errorInfo.retryAction();
+      } else if (errorInfo.type === 'not-found' || errorInfo.type === 'forbidden') {
+        // Navigate to home for navigation errors
+        window.location.href = '/';
+      } else {
+        // Refetch queries for other errors
+        queryClient.refetchQueries();
+      }
+    };
 
     return (
       <ErrorState
-        type={errorType}
-        title="Terjadi Kesalahan"
-        message="Tidak dapat memuat data saat ini. Silakan periksa koneksi internet Anda dan coba lagi."
-        onRetry={handleGlobalRetry}
+        type={errorInfo.type}
+        title={errorInfo.title}
+        message={errorInfo.message}
+        onRetry={errorInfo.showRetry ? handleRetry : undefined}
+        showRetry={errorInfo.showRetry}
         fullPage={true}
       />
     );
