@@ -1,7 +1,8 @@
 import React from "react";
-import { Book, Sparkles } from "lucide-react";
+import { Book, Sparkles, Play, Pause, Loader2 } from "lucide-react";
 import { Collection } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -15,13 +16,28 @@ interface DescriptionContentProps {
   collection: Collection | undefined;
   isExpanded: boolean;
   setIsExpanded: (expanded: boolean) => void;
+  handleTTSClick: (collectionName: string, description: string) => void;
+  currentPlayingComment: string | null;
+  isPlaying: boolean;
+  isLoading: boolean;
 }
 
 const DescriptionContent: React.FC<DescriptionContentProps> = ({ 
   collection, 
   isExpanded, 
-  setIsExpanded 
+  setIsExpanded,
+  handleTTSClick: parentHandleTTSClick,
+  currentPlayingComment,
+  isPlaying,
+  isLoading
 }) => {
+  const handleTTSClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (collection) {
+      parentHandleTTSClick(collection.name, collection.artist_explanation);
+    }
+  };
+
   // Function to estimate if title will be one or two lines
   const getTitleLines = (title: string) => {
     // Rough estimation: if title is longer than ~25 characters, it's likely 2 lines
@@ -91,6 +107,20 @@ const DescriptionContent: React.FC<DescriptionContentProps> = ({
                 {title}
               </DrawerTitle>
             </div>
+            <Button 
+              size="sm" 
+              onClick={handleTTSClick}
+              disabled={isLoading}
+              className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full p-2"
+            >
+              {isLoading && currentPlayingComment === 'description' ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isPlaying && currentPlayingComment === 'description' ? (
+                <Pause className="w-4 h-4 fill-black" />
+              ) : (
+                <Play className="w-4 h-4 fill-black" />
+              )}
+            </Button>
           </div>
           <DrawerDescription className="sr-only">
             Detail koleksi dan deskripsi lengkap

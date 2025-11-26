@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import {
     MessageSquare,
-    Volume2,
     Sparkles,
     ThumbsUp,
     ThumbsDown,
     ArrowLeft,
+    Play,
+    Pause,
+    Loader2,
 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,11 @@ interface CommentsContentProps {
     collectionId: string;
     isExpanded: boolean;
     setIsExpanded: (expanded: boolean) => void;
+    handleAISummaryTTSClick: (aiSummaryText: string) => void;
+    handleCommentTTSClick: (commentId: string, commentText: string, username?: string) => void;
+    currentPlayingComment: string | null;
+    isPlaying: boolean;
+    isLoading: boolean;
 }
 
 type CommentStep = "collapsed" | "list" | "contribution" | "form";
@@ -40,6 +47,11 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
     collectionId,
     isExpanded,
     setIsExpanded,
+    handleAISummaryTTSClick,
+    handleCommentTTSClick,
+    currentPlayingComment,
+    isPlaying,
+    isLoading,
 }) => {
     const { toast } = useToast();
     const queryClient = useQueryClient();
@@ -79,7 +91,6 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
                 return await collectionsApi.getAISummary(collectionId);
             } catch (error) {
                 // Handle 404, empty responses, and other errors gracefully
-                console.log("AI Summary not available:", error);
                 return null;
             }
         },
@@ -162,6 +173,14 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
 
     const handleLikeComment = (commentId: string) => {
         likeCommentMutation.mutate(commentId);
+    };
+
+    // Local TTS handlers that use parent TTS functions
+    const handleTTSClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (hasValidSummary && aiSummaryText) {
+            handleAISummaryTTSClick(aiSummaryText);
+        }
     };
 
     const comments = (commentsData?.data || []) as unknown as Comment[];
@@ -257,9 +276,17 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
                                     </span>
                                     <Button
                                         size="sm"
-                                        className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full p-2 ml-auto"
+                                        onClick={handleTTSClick}
+                                        disabled={isLoading || !hasValidSummary}
+                                        className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full p-2 ml-auto disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        <Volume2 className="w-4 h-4 fill-gray-900" />
+                                        {isLoading && currentPlayingComment === 'ai-summary' ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : isPlaying && currentPlayingComment === 'ai-summary' ? (
+                                            <Pause className="w-4 h-4 fill-black" />
+                                        ) : (
+                                            <Play className="w-4 h-4 fill-black" />
+                                        )}
                                     </Button>
                                 </div>
                                 {summaryLoading ? (
@@ -302,7 +329,6 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
                             dislikedComments={dislikedComments}
                             onContribute={() => {
                                 if (authToken) {
-                                    console.log("sini");
                                     navigateToStep("form");
                                 } else {
                                     navigateToStep("contribution");
@@ -315,6 +341,11 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
                             setIsAnonymous={setIsAnonymous}
                             handleSubmitComment={handleSubmitComment}
                             isAuth={!!authToken}
+                            handleAISummaryTTSClick={handleAISummaryTTSClick}
+                            handleCommentTTSClick={handleCommentTTSClick}
+                            currentPlayingComment={currentPlayingComment}
+                            isPlaying={isPlaying}
+                            isLoading={isLoading}
                         />
                     </DrawerContent>
                 </Drawer>
@@ -344,8 +375,6 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
                             dislikedComments={dislikedComments}
                             onContribute={() => {
                                 if (authToken) {
-                                    console.log("ssiniiiii");
-
                                     navigateToStep("form");
                                 } else {
                                     navigateToStep("contribution");
@@ -358,6 +387,11 @@ const CommentsContent: React.FC<CommentsContentProps> = ({
                             setIsAnonymous={setIsAnonymous}
                             handleSubmitComment={handleSubmitComment}
                             isAuth={!!authToken}
+                            handleAISummaryTTSClick={handleAISummaryTTSClick}
+                            handleCommentTTSClick={handleCommentTTSClick}
+                            currentPlayingComment={currentPlayingComment}
+                            isPlaying={isPlaying}
+                            isLoading={isLoading}
                         />
                     </AnimatePresence>
                 </DrawerContent>
@@ -391,6 +425,11 @@ const DrawerContentRenderer = React.forwardRef<
         setIsAnonymous: React.Dispatch<React.SetStateAction<boolean>>;
         handleSubmitComment: () => void;
         isAuth: boolean;
+        handleAISummaryTTSClick: (aiSummaryText: string) => void;
+        handleCommentTTSClick: (commentId: string, commentText: string, username?: string) => void;
+        currentPlayingComment: string | null;
+        isPlaying: boolean;
+        isLoading: boolean;
     }
 >(
     (
@@ -414,6 +453,11 @@ const DrawerContentRenderer = React.forwardRef<
             setIsAnonymous,
             handleSubmitComment,
             isAuth,
+            handleAISummaryTTSClick,
+            handleCommentTTSClick,
+            currentPlayingComment,
+            isPlaying,
+            isLoading,
         },
         _ref
     ) => {
@@ -467,6 +511,11 @@ const DrawerContentRenderer = React.forwardRef<
                             likedComments={likedComments}
                             dislikedComments={dislikedComments}
                             onContribute={onContribute}
+                            handleAISummaryTTSClick={handleAISummaryTTSClick}
+                            handleCommentTTSClick={handleCommentTTSClick}
+                            currentPlayingComment={currentPlayingComment}
+                            isPlaying={isPlaying}
+                            isLoading={isLoading}
                         />
                     </div>
                 </motion.div>
@@ -722,6 +771,11 @@ const CommentsList: React.FC<{
     likedComments: Set<string>;
     dislikedComments: Set<string>;
     onContribute: () => void;
+    handleAISummaryTTSClick: (aiSummaryText: string) => void;
+    handleCommentTTSClick: (commentId: string, commentText: string, username?: string) => void;
+    currentPlayingComment: string | null;
+    isPlaying: boolean;
+    isLoading: boolean;
 }> = ({
     aiSummaryText,
     summaryLoading,
@@ -732,7 +786,27 @@ const CommentsList: React.FC<{
     likedComments,
     dislikedComments,
     onContribute,
-}) => (
+    handleAISummaryTTSClick,
+    handleCommentTTSClick,
+    currentPlayingComment,
+    isPlaying,
+    isLoading,
+}) => {
+
+    // Local TTS handlers that call parent handlers
+    const handleTTSClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (hasValidSummary && aiSummaryText) {
+            handleAISummaryTTSClick(aiSummaryText);
+        }
+    };
+
+    const handleLocalCommentTTSClick = (e: React.MouseEvent, commentId: string, commentText: string, username?: string) => {
+        e.stopPropagation();
+        handleCommentTTSClick(commentId, commentText, username);
+    };
+
+    return (
     <div className="flex flex-col h-full">
         <div
             className="flex-1 overflow-y-auto p-6 pb-0"
@@ -758,9 +832,17 @@ const CommentsList: React.FC<{
                     >
                         <Button
                             size="sm"
-                            className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full p-2"
+                            onClick={handleTTSClick}
+                            disabled={isLoading || !hasValidSummary}
+                            className="bg-yellow-400 hover:bg-yellow-500 text-gray-900 rounded-full p-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Volume2 className="w-4 h-4 fill-gray-900" />
+                            {isLoading && currentPlayingComment === 'ai-summary' ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : isPlaying && currentPlayingComment === 'ai-summary' ? (
+                                <Pause className="w-4 h-4 fill-black" />
+                            ) : (
+                                <Play className="w-4 h-4 fill-black" />
+                            )}
                         </Button>
                     </motion.div>
                 </div>
@@ -825,8 +907,16 @@ const CommentsList: React.FC<{
                                     <motion.div
                                         whileHover={{ scale: 1.1 }}
                                         whileTap={{ scale: 0.9 }}
+                                        className="cursor-pointer p-1 rounded-full hover:bg-gray-200 transition-colors"
+                                        onClick={(e) => handleLocalCommentTTSClick(e, comment.id, comment.comment_text, comment.username)}
                                     >
-                                        <Volume2 className="w-4 h-4 text-gray-400 fill-gray-400" />
+                                        {isLoading && currentPlayingComment === comment.id ? (
+                                            <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+                                        ) : isPlaying && currentPlayingComment === comment.id ? (
+                                            <Pause className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                                        ) : (
+                                            <Play className="w-4 h-4 fill-gray-400 text-gray-400 hover:fill-yellow-500 hover:text-yellow-500 transition-colors" />
+                                        )}
                                     </motion.div>
                                 </div>
                                 <p className="text-gray-700 text-base mb-3 font-sf font-light">
@@ -949,6 +1039,7 @@ const CommentsList: React.FC<{
             </motion.div>
         </div>
     </div>
-);
+    );
+};
 
 export default CommentsContent;

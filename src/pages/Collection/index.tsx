@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ClickableImage } from "@/components";
 import { useToast } from "@/hooks/use-toast";
 import { useVisitorTracking } from "@/hooks/useVisitorTracking";
+import { useTTS } from "@/hooks/useTTS";
 import DescriptionContent from "./DescriptionContent";
 import AudioContent from "./AudioContent";
 import CommentsContent from "./CommentsContent";
@@ -36,6 +37,11 @@ const CollectionDetail: React.FC = () => {
   // Visitor tracking
   const visitorTracking = useVisitorTracking(id!);
 
+  // TTS state management - shared across all components
+  const { speak, stop, isPlaying, isLoading, duration, currentTime, pause, resume, seek } = useTTS();
+  const [currentPlayingComment, setCurrentPlayingComment] = useState<string | null>(null);
+  const [pausedComment, setPausedComment] = useState<string | null>(null);
+
   // Expand states for each card
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [isAudioExpanded, setIsAudioExpanded] = useState(false);
@@ -50,6 +56,21 @@ const CollectionDetail: React.FC = () => {
     enabled: !!id,
     retry: 3,
     staleTime: 5 * 60 * 1000,
+  });
+
+  // Fetch AI Summary for AudioContent
+  const { data: aiSummary } = useQuery({
+    queryKey: ['collection-ai-summary', id],
+    queryFn: async () => {
+      try {
+        return await collectionsApi.getAISummary(id!);
+      } catch (error) {
+        return null;
+      }
+    },
+    enabled: !!id,
+    retry: 3,
+    staleTime: 10 * 60 * 1000,
   });
 
   // Initialize likes count from collection data
@@ -97,6 +118,68 @@ const CollectionDetail: React.FC = () => {
       }
     }, 1000);
   };
+
+  // TTS handlers - shared across all components
+  const handleTTSClick = (text: string, identifier: string, narrator?: string) => {
+    if (isPlaying && currentPlayingComment === identifier) {
+      stop();
+      setCurrentPlayingComment(null);
+    } else if (text.trim()) {
+      setCurrentPlayingComment(identifier);
+      speak(text, 'id-ID', narrator); // Pass narrator for voice type selection
+    }
+  };
+
+  const handleCommentTTSClick = (commentId: string, commentText: string, username?: string) => {
+    const textToSpeak = username 
+      ? `Komentar dari ${username}: ${commentText}`
+      : `Komentar: ${commentText}`;
+    
+    // Use random voice for comments to make it more natural
+    const randomVoices = ['male', 'female', 'child'];
+    const randomVoice = randomVoices[Math.floor(Math.random() * randomVoices.length)];
+    
+    handleTTSClick(textToSpeak, commentId, randomVoice); // Use random voice for comments
+  };
+
+  const handleAISummaryTTSClick = (aiSummaryText: string) => {
+    handleTTSClick(`Ringkasan e-ai: ${aiSummaryText}`, 'ai-summary'); // Use default eva voice
+  };
+
+  const handleDescriptionTTSClick = (collectionName: string, description: string) => {
+    handleTTSClick(`${collectionName}. ${description}`, 'description'); // Use default eva voice
+  };
+
+  const handleAudioTTSClick = (text: string, narrator: string, version: string) => {
+    const identifier = `audio-${narrator}-${version}`;
+    if (isPlaying && currentPlayingComment === identifier) {
+      stop();
+      setCurrentPlayingComment(null);
+    } else if (text.trim()) {
+      setCurrentPlayingComment(identifier);
+      speak(text, 'id-ID', narrator); // Pass narrator for voice type selection
+    }
+  };
+
+  // Reset playing state when audio completely stops (not just paused)
+  React.useEffect(() => {
+    if (!isPlaying && duration === 0 && currentTime === 0) {
+      // Only reset if audio has completely ended/stopped (duration and currentTime are 0)
+      setCurrentPlayingComment(null);
+      setPausedComment(null);
+    }
+  }, [isPlaying, duration, currentTime]);
+
+  // Track paused state
+  React.useEffect(() => {
+    if (!isPlaying && duration > 0) {
+      // Audio is paused (not stopped)
+      setPausedComment(currentPlayingComment);
+    } else if (isPlaying && pausedComment) {
+      // Audio resumed
+      setPausedComment(null);
+    }
+  }, [isPlaying, duration, currentPlayingComment, pausedComment]);
 
   const slideRef = useRef<HTMLDivElement>(null);
   
@@ -272,6 +355,10 @@ const CollectionDetail: React.FC = () => {
                             collection={collection}
                             isExpanded={isDescriptionExpanded}
                             setIsExpanded={setIsDescriptionExpanded}
+                            handleTTSClick={handleDescriptionTTSClick}
+                            currentPlayingComment={currentPlayingComment}
+                            isPlaying={isPlaying}
+                            isLoading={isLoading}
                           />
                         )}
                         
@@ -279,6 +366,18 @@ const CollectionDetail: React.FC = () => {
                           <AudioContent
                             isExpanded={isAudioExpanded}
                             setIsExpanded={setIsAudioExpanded}
+                            collection={collection}
+                            aiSummary={aiSummary}
+                            handleAudioTTSClick={handleAudioTTSClick}
+                            currentPlayingComment={currentPlayingComment}
+                            pausedComment={pausedComment}
+                            isPlaying={isPlaying}
+                            isLoading={isLoading}
+                            duration={duration}
+                            currentTime={currentTime}
+                            pause={pause}
+                            resume={resume}
+                            seek={seek}
                           />
                         )}
                         
@@ -287,6 +386,11 @@ const CollectionDetail: React.FC = () => {
                             collectionId={id!}
                             isExpanded={isCommentsExpanded}
                             setIsExpanded={setIsCommentsExpanded}
+                            handleAISummaryTTSClick={handleAISummaryTTSClick}
+                            handleCommentTTSClick={handleCommentTTSClick}
+                            currentPlayingComment={currentPlayingComment}
+                            isPlaying={isPlaying}
+                            isLoading={isLoading}
                           />
                         )}
                       </>

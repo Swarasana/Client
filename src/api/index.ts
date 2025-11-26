@@ -254,11 +254,12 @@ export class TTSService extends APIService {
         super(apiInstance, "ai");
     }
 
-    async generateSpeech(text: string, lang: string = "id-ID", format: string = "ogg"): Promise<Blob> {
+    async generateSpeech(text: string, lang: string = "id-ID", format: string = "ogg", voiceType: string = "female"): Promise<Blob> {
         const formData = new FormData();
         formData.append('text', text);
         formData.append('lang', lang);
         formData.append('format_', format);
+        formData.append('voice_type', voiceType);
 
         const res = await apiAuth.post("/ai/tts", formData, {
             headers: {
