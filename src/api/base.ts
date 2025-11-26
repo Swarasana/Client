@@ -14,12 +14,19 @@ export const apiAuth: AxiosInstance = axios.create({
     timeout: 10000,
 });
 
-// Request interceptor for apiAuth to add Bearer token
+// Request interceptor for api to add API key
+api.interceptors.request.use((config) => {
+    config.headers['X-API-Key'] = import.meta.env.VITE_API_KEY;
+    return config;
+});
+
+// Request interceptor for apiAuth to add Bearer token and API key
 apiAuth.interceptors.request.use((config) => {
     const token = localStorage.getItem("authToken");
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+    config.headers['X-API-Key'] = import.meta.env.VITE_API_KEY;
     return config;
 });
 
