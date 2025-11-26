@@ -1,5 +1,5 @@
 import React from "react";
-import { Volume2, Play, Pause } from "lucide-react";
+import { Volume2, Play, Pause, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -58,62 +58,194 @@ const narrationVersions = [
 interface AudioContentProps {
   isExpanded: boolean;
   setIsExpanded: (expanded: boolean) => void;
+  collection: any;
+  aiSummary?: { text: string } | null;
+  handleAudioTTSClick: (text: string, narrator: string, version: string) => void;
+  currentPlayingComment: string | null;
+  pausedComment: string | null;
+  isPlaying: boolean;
+  isLoading: boolean;
+  duration: number;
+  currentTime: number;
+  pause: () => void;
+  resume: () => void;
+  seek: (time: number) => void;
 }
 
 const AudioContent: React.FC<AudioContentProps> = ({ 
   isExpanded, 
-  setIsExpanded 
+  setIsExpanded,
+  collection,
+  aiSummary,
+  handleAudioTTSClick,
+  currentPlayingComment,
+  pausedComment,
+  isPlaying: parentIsPlaying,
+  isLoading: parentIsLoading,
+  duration: audioDuration,
+  currentTime: audioCurrentTime,
+  pause,
+  resume,
+  seek
 }) => {
   // Internal state management - now self-contained
   const [selectedNarrator, setSelectedNarrator] = React.useState<string>('Anton');
-  const [isPlaying, setIsPlaying] = React.useState<boolean>(false);
   const [selectedVersion, setSelectedVersion] = React.useState<string>('');
-  const [progress, setProgress] = React.useState<number>(0);
+  const [isDragging, setIsDragging] = React.useState<boolean>(false);
+  const progressBarRef = React.useRef<HTMLDivElement>(null);
+  const previousConfigRef = React.useRef<{narrator: string, version: string}>({
+    narrator: selectedNarrator,
+    version: selectedVersion
+  });
+  
+  // Get text to speak based on selection
+  const getTextToSpeak = (): string => {
+    if (selectedVersion === 'kurator') {
+      // Use curator description (collection description)
+      return collection?.artist_explanation || '';
+    } else if (selectedVersion === 'Publik') {
+      // Use AI summary
+      return aiSummary?.text || '';
+    }
+    return '';
+  };
+  
+  // Check if form is complete and content is available
+  const isFormComplete = selectedNarrator && selectedVersion;
+  const hasValidContent = isFormComplete && getTextToSpeak().trim().length > 0;
+  
+  // Get the audio identifier for this specific configuration
+  const getAudioIdentifier = () => `audio-${selectedNarrator}-${selectedVersion}`;
+  
+  // Check if this audio configuration is currently playing
+  const isThisAudioPlaying = parentIsPlaying && currentPlayingComment === getAudioIdentifier();
+  
+  // Check if this audio is the active one (playing or paused)
+  const isThisAudioActive = currentPlayingComment === getAudioIdentifier() || pausedComment === getAudioIdentifier();
+  
+  // Calculate progress percentage from real audio duration and current time
+  // Show progress when this is the active audio and has duration
+  const progress = isThisAudioActive && audioDuration > 0 && audioCurrentTime >= 0
+    ? (audioCurrentTime / audioDuration) * 100 
+    : 0;
+
+  // Reset audio when form selection changes
+  React.useEffect(() => {
+    const previousConfig = previousConfigRef.current;
+    const hasConfigChanged = 
+      previousConfig.narrator !== selectedNarrator || 
+      previousConfig.version !== selectedVersion;
+
+    if (hasConfigChanged && audioDuration > 0) {
+      console.log('Form changed, stopping audio:', { 
+        from: previousConfig, 
+        to: { narrator: selectedNarrator, version: selectedVersion },
+        isActive: isThisAudioActive,
+        isPlaying: parentIsPlaying,
+        duration: audioDuration
+      });
+      
+      // Force stop any existing audio regardless of current identifiers
+      stop();
+    }
+
+    // Update the previous config
+    previousConfigRef.current = {
+      narrator: selectedNarrator,
+      version: selectedVersion
+    };
+  }, [selectedNarrator, selectedVersion, stop, isThisAudioActive, isThisAudioPlaying, audioDuration]);
+  
+  // Helper function to format time in MM:SS format
+  const formatTime = (seconds: number): string => {
+    if (isNaN(seconds) || seconds < 0) return '0:00';
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Handle seeking by clicking/dragging on progress bar
+  const handleProgressBarInteraction = (clientX: number) => {
+    if (!progressBarRef.current || audioDuration <= 0 || !isThisAudioActive) return;
+    
+    const rect = progressBarRef.current.getBoundingClientRect();
+    const clickPosition = (clientX - rect.left) / rect.width;
+    const seekTime = Math.max(0, Math.min(clickPosition * audioDuration, audioDuration));
+    
+    seek(seekTime);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (audioDuration <= 0 || !isThisAudioActive) return;
+    setIsDragging(true);
+    handleProgressBarInteraction(e.clientX);
+    e.preventDefault(); // Prevent text selection
+  };
+
+  const handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (audioDuration <= 0 || !isThisAudioActive) return;
+    setIsDragging(true);
+    handleProgressBarInteraction(e.touches[0].clientX);
+    e.preventDefault();
+  };
+
+  const handleMouseMove = React.useCallback((e: MouseEvent) => {
+    if (isDragging) {
+      handleProgressBarInteraction(e.clientX);
+    }
+  }, [isDragging, audioDuration, seek, isThisAudioActive]);
+
+  const handleTouchMove = React.useCallback((e: TouchEvent) => {
+    if (isDragging) {
+      handleProgressBarInteraction(e.touches[0].clientX);
+      e.preventDefault();
+    }
+  }, [isDragging, audioDuration, seek, isThisAudioActive]);
+
+  const handleMouseUp = React.useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const handleTouchEnd = React.useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  // Add global event listeners for dragging
+  React.useEffect(() => {
+    if (isDragging) {
+      // Mouse events
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      // Touch events
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
   
   // Audio playback handler
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
+    if (isThisAudioPlaying) {
+      // If currently playing this audio, pause it
+      pause();
+    } else if (isThisAudioActive && audioDuration > 0) {
+      // If audio exists (was paused), resume from last position
+      resume();
+    } else {
+      // If no audio or starting fresh, generate new TTS
+      const textToSpeak = getTextToSpeak();
+      if (textToSpeak.trim()) {
+        handleAudioTTSClick(textToSpeak, selectedNarrator, selectedVersion);
+      }
+    }
   };
   
-  // Audio simulation - 30 seconds total
-  const AUDIO_DURATION = 30000; // 30 seconds in ms
-  
-  // Check if form is complete
-  const isFormComplete = selectedNarrator && selectedVersion;
-  
-  // Audio progress simulation
-  React.useEffect(() => {
-    let interval: number;
-    
-    if (isPlaying && isFormComplete) {
-      interval = setInterval(() => {
-        setProgress(prev => {
-          const newProgress = prev + (100 / (AUDIO_DURATION / 100)); // Update every 100ms
-          if (newProgress >= 100) {
-            // Schedule the handlePlayPause call for the next tick to avoid setState during render
-            setTimeout(() => handlePlayPause(), 0);
-            return 100;
-          }
-          return newProgress;
-        });
-      }, 100);
-    }
-    
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isPlaying, isFormComplete, handlePlayPause]);
-  
-  // Reset progress when stopping
-  React.useEffect(() => {
-    if (!isPlaying) {
-      // Small delay before resetting to show completion
-      const timeout = setTimeout(() => {
-        if (!isPlaying) setProgress(0);
-      }, 1000);
-      return () => clearTimeout(timeout);
-    }
-  }, [isPlaying]);
   
   return (
     <Drawer open={isExpanded} onOpenChange={setIsExpanded}>
@@ -140,18 +272,20 @@ const AudioContent: React.FC<AudioContentProps> = ({
               <Button
                 onClick={(e) => {
                   e.stopPropagation();
-                  if (isFormComplete) {
+                  if (hasValidContent) {
                     handlePlayPause();
                   }
                 }}
-                disabled={!isFormComplete}
+                disabled={!hasValidContent || parentIsLoading}
                 className={`rounded-full w-12 h-12 p-0 shadow-lg transition-all ${
-                  isFormComplete 
+                  hasValidContent 
                     ? 'bg-yellow-400 hover:bg-yellow-600 text-black' 
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                {isPlaying ? (
+                {parentIsLoading && currentPlayingComment === getAudioIdentifier() ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : isThisAudioPlaying ? (
                   <Pause className="w-5 h-5 fill-black" />
                 ) : (
                   <Play className="w-5 h-5 ml-0.5 fill-black" />
@@ -243,32 +377,51 @@ const AudioContent: React.FC<AudioContentProps> = ({
           <div className="space-y-4">
             {/* Progress Bar */}
             <div className="w-full">
-              <div className="w-full bg-gray-200 h-2 rounded-full">
+              <div 
+                ref={progressBarRef}
+                className={`relative w-full bg-gray-200 h-2 rounded-full cursor-pointer hover:h-3 transition-all ${
+                  isThisAudioActive && audioDuration > 0 ? 'hover:bg-gray-300' : ''
+                }`}
+                onMouseDown={handleMouseDown}
+                onTouchStart={handleTouchStart}
+              >
                 <div 
-                  className="bg-gray-900 h-2 rounded-full transition-all duration-100 ease-linear" 
+                  className="bg-gray-900 h-full rounded-full transition-all duration-100 ease-linear" 
                   style={{ width: `${progress}%` }}
                 ></div>
+                
+                {/* Draggable thumb - only show when audio exists */}
+                {isThisAudioActive && audioDuration > 0 && (
+                  <div
+                    className={`absolute top-1/2 w-4 h-4 bg-gray-900 rounded-full border-2 border-white shadow-lg transform -translate-y-1/2 transition-all ${
+                      isDragging ? 'scale-125' : 'hover:scale-110'
+                    }`}
+                    style={{ left: `calc(${progress}% - 8px)` }}
+                  />
+                )}
               </div>
             </div>
             
             {/* Time display */}
             <div className="flex justify-between text-xs text-gray-500 font-sf">
-              <span>0:{String(Math.floor((progress / 100) * 30)).padStart(2, '0')}</span>
-              <span>0:30</span>
+              <span>{formatTime(isThisAudioActive ? audioCurrentTime : 0)}</span>
+              <span>{formatTime(isThisAudioActive && audioDuration > 0 ? audioDuration : 0)}</span>
             </div>
             
             {/* Play Button */}
             <div className="flex justify-center">
               <Button
                 onClick={handlePlayPause}
-                disabled={!isFormComplete}
+                disabled={!hasValidContent || parentIsLoading}
                 className={`rounded-full w-16 h-16 p-0 shadow-lg transition-all ${
-                  isFormComplete 
+                  hasValidContent 
                     ? 'bg-yellow-400 hover:bg-yellow-600 text-black' 
                     : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                {isPlaying ? (
+                {parentIsLoading && currentPlayingComment === getAudioIdentifier() ? (
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                ) : isThisAudioPlaying ? (
                   <Pause className="w-8 h-8 fill-black" />
                 ) : (
                   <Play className="w-8 h-8 ml-1 fill-black" />
@@ -277,13 +430,22 @@ const AudioContent: React.FC<AudioContentProps> = ({
             </div>
             
             {/* Form validation message */}
-            {!isFormComplete && (
+            {!isFormComplete ? (
               <div className="text-center">
                 <p className="text-sm text-gray-500 font-sf">
                   Pilih karakter narator dan versi narasi untuk memutar audio
                 </p>
               </div>
-            )}
+            ) : !getTextToSpeak().trim() ? (
+              <div className="text-center">
+                <p className="text-sm text-orange-600 font-sf">
+                  {selectedVersion === 'kurator' 
+                    ? 'Deskripsi kurator tidak tersedia untuk koleksi ini' 
+                    : 'Ringkasan AI tidak tersedia untuk koleksi ini'
+                  }
+                </p>
+              </div>
+            ) : null}
           </div>
         </div>
       </DrawerContent>
