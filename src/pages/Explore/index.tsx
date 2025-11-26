@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { motion, PanInfo } from "framer-motion";
-import { Search, Volume2 } from "lucide-react";
+import { Search, Play, Pause, Loader2 } from "lucide-react";
+import { useTTS } from "@/hooks/useTTS";
 import { exhibitionsApi } from "@/api";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,6 +24,35 @@ const Explore: React.FC = () => {
     const autoScrollRef = useRef<number | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
 
+    // TTS functionality for character previews
+    const { speak, stop, isPlaying, isLoading: isTTSLoading } = useTTS();
+    const [currentPlayingCharacter, setCurrentPlayingCharacter] = useState<string | null>(null);
+
+    // Audio characters data with voice samples
+    const audioCharacters = [
+        { 
+            name: "Anton", 
+            avatar: anton, 
+            color: "bg-[#FFD942]",
+            voiceType: "male",
+            sample: "Selamat datang di Swarasana! Aku Anton, siap memandu kalian menjelajahi kebudayaan Indonesia dengan semangat yang membara"
+        },
+        { 
+            name: "Dede", 
+            avatar: dede, 
+            color: "bg-[#78C49E]",
+            voiceType: "child",
+            sample: "Halo semuanya! Aku Dede, mari bersama-sama belajar budaya Indonesia dengan cara yang menyenangkan dan penuh keceriaan!"
+        },
+        { 
+            name: "Eva", 
+            avatar: eva, 
+            color: "bg-[#FFEBB2]", 
+            voiceType: "female",
+            sample: "Selamat datang di Swarasana! Aku Eva, akan menemani perjalanan kalian mengeksplorasi kekayaan budaya nusantara dengan penuh kelembutan!"
+        }
+    ];
+
     // Fetch exhibitions data
     const { data: exhibitionsData, isLoading } = useQuery({
         queryKey: ['exhibitions'],
@@ -33,12 +63,6 @@ const Explore: React.FC = () => {
 
     const exhibitions = Array.isArray(exhibitionsData?.data) ? exhibitionsData.data : [];
 
-    // Audio characters data - memoized
-    const audioCharacters = useMemo(() => [
-        { name: "Anton", avatar: anton, color: "bg-[#FFD942]" },
-        { name: "Dede", avatar: dede, color: "bg-[#78C49E]" },
-        { name: "Eva", avatar: eva, color: "bg-[#FFEBB2]" }
-    ] as const, []);
 
     // Memoized calculations for carousel
     const carouselConfig = useMemo(() => {
@@ -107,6 +131,26 @@ const Explore: React.FC = () => {
             navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
         }
     }, [searchQuery, navigate]);
+
+    // Character TTS handler
+    const handleCharacterClick = useCallback((character: typeof audioCharacters[0]) => {
+        if (isPlaying && currentPlayingCharacter === character.name) {
+            // Stop if currently playing this character
+            stop();
+            setCurrentPlayingCharacter(null);
+        } else {
+            // Play the character's voice sample
+            setCurrentPlayingCharacter(character.name);
+            speak(character.sample, 'id-ID', character.name);
+        }
+    }, [isPlaying, currentPlayingCharacter, stop, speak]);
+
+    // Reset playing character when audio stops
+    React.useEffect(() => {
+        if (!isPlaying) {
+            setCurrentPlayingCharacter(null);
+        }
+    }, [isPlaying]);
 
     const handleSlideChange = useCallback((index: number) => {
         if (autoScrollRef.current) {
@@ -284,29 +328,92 @@ const Explore: React.FC = () => {
                                 </div>
                             ))
                         ) : (
-                            audioCharacters.map((character, index) => (
-                            <motion.div
-                                key={character.name}
-                                className="flex flex-col items-center cursor-pointer"
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                            >
-                                <div className={`w-24 h-24 md:w-24 md:h-24 ${character.color} rounded-full flex items-center justify-center text-2xl md:text-3xl mb-2 relative`}>
-                                    <img 
-                                        src={character.avatar} 
-                                        alt={character.name}
-                                        className="h-13 mb-2"
-                                    />
-                                    <div className="absolute -bottom-1 -right-1 w-9 h-9 bg-white rounded-full flex items-center justify-center">
-                                        <Volume2 className="w-6 h-6 text-gray-800 fill-gray-800" />
-                                    </div>
-                                </div>
-                                <span className="font-sf font-semibold text-yellow1">{character.name}</span>
-                            </motion.div>
-                        ))
+                            audioCharacters.map((character, index) => {
+                                const isThisCharacterPlaying = isPlaying && currentPlayingCharacter === character.name;
+                                const isThisCharacterLoading = isTTSLoading && currentPlayingCharacter === character.name;
+                                
+                                return (
+                                <motion.div
+                                    key={character.name}
+                                    className="flex flex-col items-center cursor-pointer"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                    onClick={() => handleCharacterClick(character)}
+                                >
+                                    {/* Character Avatar with Animations */}
+                                    <motion.div 
+                                        className={`w-24 h-24 md:w-24 md:h-24 ${character.color} rounded-full flex items-center justify-center text-2xl md:text-3xl mb-2 relative ${
+                                            isThisCharacterPlaying ? 'ring-4 ring-white/50' : ''
+                                        }`}
+                                        animate={isThisCharacterPlaying ? {
+                                            scale: [1, 1.1, 1],
+                                            boxShadow: [
+                                                "0 0 0 0px rgba(255, 255, 255, 0.5)",
+                                                "0 0 0 10px rgba(255, 255, 255, 0.1)",
+                                                "0 0 0 0px rgba(255, 255, 255, 0.5)"
+                                            ]
+                                        } : {}}
+                                        transition={{
+                                            duration: 2,
+                                            repeat: isThisCharacterPlaying ? Infinity : 0,
+                                            ease: "easeInOut"
+                                        }}
+                                    >
+                                        <motion.img 
+                                            src={character.avatar} 
+                                            alt={character.name}
+                                            className="h-13 mb-2"
+                                            animate={isThisCharacterPlaying ? {
+                                                rotate: [-2, 2, -2]
+                                            } : {}}
+                                            transition={{
+                                                duration: 0.5,
+                                                repeat: isThisCharacterPlaying ? Infinity : 0,
+                                                repeatType: "reverse"
+                                            }}
+                                        />
+                                        
+                                        {/* Play/Pause/Loading Button */}
+                                        <motion.div 
+                                            className="absolute -bottom-1 -right-1 w-9 h-9 bg-white rounded-full flex items-center justify-center shadow-lg"
+                                            whileHover={{ scale: 1.1 }}
+                                            whileTap={{ scale: 0.9 }}
+                                        >
+                                            {isThisCharacterLoading ? (
+                                                <Loader2 className="w-4 h-4 text-gray-800 animate-spin" />
+                                            ) : isThisCharacterPlaying ? (
+                                                <Pause className="w-4 h-4 text-gray-800 fill-gray-800" />
+                                            ) : (
+                                                <Play className="w-4 h-4 text-gray-800 fill-gray-800 ml-0.5" />
+                                            )}
+                                        </motion.div>
+                                    </motion.div>
+                                    
+                                    {/* Character Name with Glow Effect */}
+                                    <motion.span 
+                                        className={`font-sf font-semibold text-yellow1 ${
+                                            isThisCharacterPlaying ? 'text-white' : ''
+                                        }`}
+                                        animate={isThisCharacterPlaying ? {
+                                            textShadow: [
+                                                "0 0 0px rgba(255, 255, 255, 1)",
+                                                "0 0 10px rgba(255, 255, 255, 0.8)",
+                                                "0 0 0px rgba(255, 255, 255, 1)"
+                                            ]
+                                        } : {}}
+                                        transition={{
+                                            duration: 1.5,
+                                            repeat: isThisCharacterPlaying ? Infinity : 0,
+                                        }}
+                                    >
+                                        {character.name}
+                                    </motion.span>
+                                </motion.div>
+                                );
+                            })
                         )}
                     </div>
                 </div>
